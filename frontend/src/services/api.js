@@ -26,6 +26,8 @@ api.interceptors.response.use(
 )
 
 export const getMe = () => api.get('/auth/me')
+export const registerUser = (data) => api.post('/auth/register', data)
+export const loginUser = (data) => api.post('/auth/login', data)
 export const getAllUsers = () => api.get('/admin/users')
 export const updateUserRole = (id, role) =>
   api.put(`/admin/users/${id}/role`, null, { params: { role } })

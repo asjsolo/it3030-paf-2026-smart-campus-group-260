@@ -29,6 +29,9 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    // Local auth password (null for OAuth2 users)
+    private String password;
+
     // OAuth2 provider (e.g. "google")
     private String provider;
 

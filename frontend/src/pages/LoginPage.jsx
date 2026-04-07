@@ -1,21 +1,73 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { loginUser, registerUser } from '../services/api'
 
 export default function LoginPage() {
-  const { user } = useAuth()
+  const { user, login } = useAuth()
   const navigate = useNavigate()
+  const [tab, setTab] = useState('signin') // 'signin' | 'signup'
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  // Already logged in — redirect to the correct dashboard
   useEffect(() => {
     if (user) {
       navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard', { replace: true })
     }
   }, [user, navigate])
 
-  const handleGoogleLogin = () => {
-    // Redirects to Spring Boot OAuth2 authorization endpoint
-    window.location.href = '/oauth2/authorization/google'
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    setError('')
+  }
+
+  const handleSignIn = async (e) => {
+    e.preventDefault()
+    if (!form.email || !form.password) {
+      setError('Email and password are required.')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await loginUser({ email: form.email, password: form.password })
+      await login(res.data.token)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid email or password.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSignUp = async (e) => {
+    e.preventDefault()
+    if (!form.name || !form.email || !form.password) {
+      setError('All fields are required.')
+      return
+    }
+    if (form.password !== form.confirm) {
+      setError('Passwords do not match.')
+      return
+    }
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await registerUser({ name: form.name, email: form.email, password: form.password })
+      await login(res.data.token)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Email may already be in use.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const switchTab = (t) => {
+    setTab(t)
+    setError('')
+    setForm({ name: '', email: '', password: '', confirm: '' })
   }
 
   return (
@@ -24,18 +76,103 @@ export default function LoginPage() {
         <div style={styles.logo}>🏛️</div>
         <h1 style={styles.title}>Smart Campus</h1>
         <p style={styles.subtitle}>Operations Hub</p>
-        <p style={styles.description}>
-          Manage facility bookings, maintenance, and campus operations in one place.
-        </p>
 
-        <button style={styles.googleBtn} onClick={handleGoogleLogin}>
+        {/* Tab switcher */}
+        <div style={styles.tabs}>
+          <button
+            style={{ ...styles.tab, ...(tab === 'signin' ? styles.tabActive : {}) }}
+            onClick={() => switchTab('signin')}
+          >
+            Sign In
+          </button>
+          <button
+            style={{ ...styles.tab, ...(tab === 'signup' ? styles.tabActive : {}) }}
+            onClick={() => switchTab('signup')}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        {error && <div style={styles.error}>{error}</div>}
+
+        {tab === 'signin' ? (
+          <form onSubmit={handleSignIn} style={styles.form}>
+            <input
+              style={styles.input}
+              type="email"
+              name="email"
+              placeholder="Email address"
+              value={form.email}
+              onChange={handleChange}
+              autoComplete="email"
+            />
+            <input
+              style={styles.input}
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+            />
+            <button style={styles.submitBtn} type="submit" disabled={loading}>
+              {loading ? 'Signing in…' : 'Sign In'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSignUp} style={styles.form}>
+            <input
+              style={styles.input}
+              type="text"
+              name="name"
+              placeholder="Full name"
+              value={form.name}
+              onChange={handleChange}
+              autoComplete="name"
+            />
+            <input
+              style={styles.input}
+              type="email"
+              name="email"
+              placeholder="Email address"
+              value={form.email}
+              onChange={handleChange}
+              autoComplete="email"
+            />
+            <input
+              style={styles.input}
+              type="password"
+              name="password"
+              placeholder="Password (min. 6 characters)"
+              value={form.password}
+              onChange={handleChange}
+              autoComplete="new-password"
+            />
+            <input
+              style={styles.input}
+              type="password"
+              name="confirm"
+              placeholder="Confirm password"
+              value={form.confirm}
+              onChange={handleChange}
+              autoComplete="new-password"
+            />
+            <button style={styles.submitBtn} type="submit" disabled={loading}>
+              {loading ? 'Creating account…' : 'Create Account'}
+            </button>
+          </form>
+        )}
+
+        <div style={styles.divider}>
+          <span style={styles.dividerText}>or</span>
+        </div>
+
+        <button style={styles.googleBtn} onClick={() => { window.location.href = '/oauth2/authorization/google' }}>
           <GoogleIcon />
-          Sign in with Google
+          Continue with Google
         </button>
 
         <p style={styles.footer}>
-          Access is managed by your university account.
-          <br />
           New users are assigned the <strong>User</strong> role by default.
         </p>
       </div>
@@ -65,54 +202,118 @@ const styles = {
   card: {
     background: '#fff',
     borderRadius: 16,
-    padding: '48px 40px',
+    padding: '40px 40px 32px',
     maxWidth: 420,
     width: '90%',
     textAlign: 'center',
     boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
   },
-  logo: {
-    fontSize: 56,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 700,
-    color: '#1a1a2e',
-    marginBottom: 4,
-  },
+  logo: { fontSize: 48, marginBottom: 8 },
+  title: { fontSize: 26, fontWeight: 700, color: '#1a1a2e', marginBottom: 2 },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 600,
     color: '#0f3460',
     letterSpacing: 2,
     textTransform: 'uppercase',
+    marginBottom: 24,
+  },
+  tabs: {
+    display: 'flex',
+    borderRadius: 8,
+    border: '1px solid #e0e0e0',
+    overflow: 'hidden',
     marginBottom: 20,
   },
-  description: {
-    color: '#666',
+  tab: {
+    flex: 1,
+    padding: '10px 0',
+    border: 'none',
+    background: '#f9f9f9',
     fontSize: 14,
-    lineHeight: 1.6,
-    marginBottom: 32,
+    fontWeight: 600,
+    color: '#888',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  tabActive: {
+    background: '#0f3460',
+    color: '#fff',
+  },
+  error: {
+    background: '#fff0f0',
+    border: '1px solid #ffcccc',
+    color: '#c0392b',
+    borderRadius: 6,
+    padding: '8px 12px',
+    fontSize: 13,
+    marginBottom: 14,
+    textAlign: 'left',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  input: {
+    width: '100%',
+    padding: '11px 14px',
+    border: '1.5px solid #e0e0e0',
+    borderRadius: 8,
+    fontSize: 14,
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
+  },
+  submitBtn: {
+    width: '100%',
+    padding: '12px',
+    background: '#0f3460',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginTop: 4,
+    transition: 'background 0.2s',
+  },
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '18px 0',
+    gap: 10,
+  },
+  dividerText: {
+    color: '#bbb',
+    fontSize: 13,
+    flex: 1,
+    textAlign: 'center',
+    borderTop: '1px solid #e0e0e0',
+    lineHeight: 0,
+    position: 'relative',
+    top: 0,
   },
   googleBtn: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    padding: '13px 20px',
+    padding: '11px 20px',
     background: '#fff',
-    border: '2px solid #e0e0e0',
+    border: '1.5px solid #e0e0e0',
     borderRadius: 8,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 600,
     color: '#333',
+    cursor: 'pointer',
     transition: 'all 0.2s',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   footer: {
     color: '#999',
     fontSize: 12,
     lineHeight: 1.7,
+    marginTop: 0,
   },
 }
