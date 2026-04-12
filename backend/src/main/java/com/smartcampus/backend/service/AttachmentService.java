@@ -5,6 +5,7 @@ import com.smartcampus.backend.entity.IncidentTicket;
 import com.smartcampus.backend.repository.AttachmentRepository;
 import com.smartcampus.backend.repository.IncidentTicketRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // <-- ADD THIS IMPORT
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ public class AttachmentService {
 
     // --- Business Logic for File Uploads ---
     
+    @Transactional // <-- ADD THIS ANNOTATION to keep the database session open!
     public Attachment uploadAttachment(Long ticketId, MultipartFile file) throws IOException {
         // Step A: Find the ticket in the database
         IncidentTicket ticket = ticketRepository.findById(ticketId)
@@ -36,7 +38,6 @@ public class AttachmentService {
         Attachment attachment = new Attachment(
                 file.getOriginalFilename(),
                 file.getContentType(),
-                //This converts the physical image file into the raw byte code that your LONGBLOB database column requires.
                 file.getBytes(),
                 ticket
         );
@@ -45,7 +46,6 @@ public class AttachmentService {
         return attachmentRepository.save(attachment);
     }
     
-    // Quick method to retrieve the file later so your React frontend can display it
     public Attachment getAttachment(Long attachmentId) {
         return attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Attachment not found with id: " + attachmentId));
