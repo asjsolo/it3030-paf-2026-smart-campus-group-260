@@ -50,4 +50,30 @@ public class IncidentTicketService {
         
         return repository.save(existingTicket);
     }
+
+    // 5. Assign a Technician
+    public IncidentTicket assignTechnician(Long id, String technician) {
+        // Reusing your getTicketById method!
+        IncidentTicket ticket = getTicketById(id);
+        
+        ticket.setAssignedTechnician(technician);
+        
+        // Automatically move status to IN_PROGRESS if it was OPEN
+        if ("OPEN".equals(ticket.getStatus())) {
+            ticket.setStatus("IN_PROGRESS");
+        }
+        
+        return repository.save(ticket);
+    }
+
+    // 6. Reject a Ticket
+    public IncidentTicket rejectTicket(Long id, String reason) {
+        // Reusing your getTicketById method!
+        IncidentTicket ticket = getTicketById(id);
+        
+        ticket.setStatus("REJECTED");
+        ticket.setRejectionReason(reason);
+        
+        return repository.save(ticket);
+    }
 }
