@@ -11,4 +11,5 @@ public class UserInfo {
     private String name;
     private String picture;
     private String role;
+    private boolean active;
 }

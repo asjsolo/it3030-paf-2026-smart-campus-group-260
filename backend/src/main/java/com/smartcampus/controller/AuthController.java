@@ -1,8 +1,10 @@
 package com.smartcampus.controller;
 
 import com.smartcampus.dto.AuthResponse;
+import com.smartcampus.dto.CreateUserRequest;
 import com.smartcampus.dto.LoginRequest;
 import com.smartcampus.dto.RegisterRequest;
+import com.smartcampus.dto.UpdateUserRequest;
 import com.smartcampus.dto.UserInfo;
 import com.smartcampus.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,15 @@ public class AuthController {
     }
 
     /**
+     * Admin: create a user with any role (e.g. STAFF, TECHNICIAN).
+     */
+    @PostMapping("/admin/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserInfo> createUser(@RequestBody CreateUserRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
+    }
+
+    /**
      * Admin: change a user's role.
      */
     @PutMapping("/admin/users/{id}/role")
@@ -57,5 +68,33 @@ public class AuthController {
     public ResponseEntity<UserInfo> updateUserRole(@PathVariable Long id,
                                                    @RequestParam String role) {
         return ResponseEntity.ok(userService.updateRole(id, role));
+    }
+
+    /**
+     * Admin: view a single user's details.
+     */
+    @GetMapping("/admin/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserInfo> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    /**
+     * Admin: edit a user (name, email, role, password).
+     */
+    @PutMapping("/admin/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserInfo> updateUser(@PathVariable Long id,
+                                               @RequestBody UpdateUserRequest request) {
+        return ResponseEntity.ok(userService.updateUser(id, request));
+    }
+
+    /**
+     * Admin: toggle active/deactivated status.
+     */
+    @PatchMapping("/admin/users/{id}/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserInfo> toggleUserActive(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.toggleActive(id));
     }
 }

@@ -29,6 +29,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
     // Local auth password (null for OAuth2 users)
     private String password;
 
