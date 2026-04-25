@@ -1,66 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-    LayoutDashboard,
-    Box,
-    Calendar,
-    Wrench,
-    Bell,
-    Search,
-    Users,
-    Monitor,
-    MapPin,
-    Wifi,
-    Wind,
-    Stethoscope,
-    Dumbbell,
-    Library,
-    Mic2,
-    Filter,
-    ChevronDown
+    LayoutDashboard, Box, Calendar, Wrench, Bell, Search, Users,
+    Monitor, MapPin, Wifi, Wind, Stethoscope, Dumbbell, Library,
+    Mic2, Filter, ChevronDown
 } from 'lucide-react';
+import { useResources } from './ResourceContext';
+import ResourceDetailModal from './ResourceDetailModal';
 
-// --- Mock Data ---
-const categoriesData = [
-    {
-        title: "Academic Spaces",
-        icon: <Monitor className="w-5 h-5" />,
-        color: "blue",
-        items: [
-            { id: 'LH301', name: "Lecture Hall LH301", type: "Lecture Hall", loc: "Malabe", cap: 120, status: "Active", tags: ['AC', 'Wifi'] },
-            { id: 'LAB202', name: "Lab 202", type: "Lab", loc: "Computing Bld", cap: 50, status: "Active", tags: ['PC', 'Wifi'] },
-        ]
-    },
-    {
-        title: "Study & Library Spaces",
-        icon: <Library className="w-5 h-5" />,
-        color: "green",
-        items: [
-            { id: 'LIB_MAIN', name: "Main Library", type: "Study Area", loc: "Floor 2", cap: 300, status: "Active", noise: "Silent", seats: 0.65 },
-            { id: 'GSR401', name: "Group Study Room", type: "Meeting Room", loc: "Floor 4", cap: 8, status: "Active", tags: ['Whiteboard'] },
-        ]
-    },
-    {
-        title: "Sports & Fitness",
-        icon: <Dumbbell className="w-5 h-5" />,
-        color: "red",
-        items: [
-            { id: 'GYM01', name: "Student Gym", type: "Fitness", loc: "Sports Complex", status: "Active", crowd: "Medium" },
-        ]
-    }
+// ── Category display metadata (icon + colour) ──────────────────────────────
+const CATEGORY_META = [
+    { title: 'Academic Spaces',         icon: <Monitor  className="w-5 h-5" />, color: 'blue'   },
+    { title: 'Study & Library Spaces',  icon: <Library  className="w-5 h-5" />, color: 'green'  },
+    { title: 'Sports & Fitness',        icon: <Dumbbell className="w-5 h-5" />, color: 'red'    },
+    { title: 'Student Medical Services',icon: <Stethoscope className="w-5 h-5" />, color: 'pink'},
+    { title: 'Events & Auditorium',     icon: <Mic2     className="w-5 h-5" />, color: 'orange' },
+    { title: 'Equipment',               icon: <Box      className="w-5 h-5" />, color: 'purple' },
 ];
 
-// --- Sub-Components ---
+// ── Sub-Components ─────────────────────────────────────────────────────────
 
 const StatusBadge = ({ status }) => {
     const colors = {
-        Active: "bg-green-100 text-green-700",
-        "Out of Service": "bg-red-100 text-red-700",
-        "Maintenance": "bg-yellow-100 text-yellow-700"
+        Active: 'bg-green-100 text-green-700',
+        'Out of Service': 'bg-red-100 text-red-700',
+        Maintenance: 'bg-yellow-100 text-yellow-700',
+        'Under Maintenance': 'bg-yellow-100 text-yellow-700',
     };
-    return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[status]}`}>{status}</span>;
+    return (
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-600'}`}>
+            {status}
+        </span>
+    );
 };
 
-const ResourceCard = ({ item }) => (
+const ResourceCard = ({ item, onViewDetails }) => (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
         <div className="flex justify-between items-start mb-3">
             <h4 className="font-bold text-gray-800">{item.name}</h4>
@@ -81,26 +54,91 @@ const ResourceCard = ({ item }) => (
             )}
         </div>
         <div className="flex gap-2">
-            <button className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">View Details</button>
-            <button className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Book Now</button>
+            <button
+                onClick={() => onViewDetails(item.id)}
+                className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+            >
+                View Details
+            </button>
+            <button className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                Book Now
+            </button>
         </div>
     </div>
 );
 
-// --- Main Dashboard Component ---
+// ── Main Dashboard Component ───────────────────────────────────────────────
 
 export default function CampusDashboard() {
-    const [activeCategory, setActiveCategory] = useState("All");
-    const [minCapacity, setMinCapacity] = useState(0);
+    const { resources } = useResources();
 
-    // Filter Logic
+    const [activeCategory, setActiveCategory] = useState('All');
+    const [minCapacity, setMinCapacity]         = useState(0);
+    const [searchTerm, setSearchTerm]           = useState('');
+    const [selectedCampus, setSelectedCampus]   = useState('All');
+    const [activeTags, setActiveTags]           = useState([]);
+    const [selectedResource, setSelectedResource] = useState(null);
+
+    // Derive unique campuses for location filter
+    const campuses = useMemo(
+        () => ['All', ...new Set(resources.filter(r => !r.archived).map(r => r.campus))],
+        [resources]
+    );
+
+    // Build categorised data from context (mirrors original categoriesData shape)
+    const categoriesData = useMemo(() =>
+        CATEGORY_META.map(meta => ({
+            ...meta,
+            items: resources
+                .filter(r => !r.archived && r.category === meta.title)
+                .map(r => ({
+                    id: r.id, name: r.name, type: r.type, loc: r.loc,
+                    cap: r.cap, status: r.status, tags: r.tags,
+                    crowd: r.crowd, noise: r.noise,
+                })),
+        })),
+        [resources]
+    );
+
+    // Live summary stats
+    const totalCount   = resources.filter(r => !r.archived).length;
+    const activeCount  = resources.filter(r => !r.archived && r.status === 'Active').length;
+
+    // Featured resources from context
+    const auditorium   = resources.find(r => r.id === 'AUD_MAIN') || {};
+    const medCenter    = resources.find(r => r.id === 'MED01')    || {};
+
+    // Toggle preference tag
+    const toggleTag = (tag) =>
+        setActiveTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+
+    // Filter Logic (extends original with search + campus + tags)
     const filteredCategories = categoriesData.map(cat => ({
         ...cat,
         items: cat.items.filter(item =>
-            (activeCategory === "All" || cat.title === activeCategory) &&
-            (item.cap ? item.cap >= minCapacity : true)
-        )
+            (activeCategory === 'All' || cat.title === activeCategory) &&
+            (item.cap ? item.cap >= minCapacity : true) &&
+            (searchTerm === '' ||
+                item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.type.toLowerCase().includes(searchTerm.toLowerCase())) &&
+            (selectedCampus === 'All' || (resources.find(r => r.id === item.id)?.campus === selectedCampus)) &&
+            (activeTags.length === 0 || activeTags.every(tag => item.tags?.includes(tag)))
+        ),
     })).filter(cat => cat.items.length > 0);
+
+    const handleViewDetails = (id) => {
+        const resource = resources.find(r => r.id === id);
+        if (resource) setSelectedResource(resource);
+    };
+
+    const resetFilters = () => {
+        setActiveCategory('All');
+        setMinCapacity(0);
+        setSearchTerm('');
+        setSelectedCampus('All');
+        setActiveTags([]);
+    };
 
     return (
         <div className="flex min-h-screen bg-gray-50 font-sans text-gray-900">
@@ -116,10 +154,10 @@ export default function CampusDashboard() {
                 <nav className="p-4 space-y-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Main Menu</p>
                     {[
-                        { icon: <LayoutDashboard size={18} />, label: "Dashboard" },
-                        { icon: <Box size={18} />, label: "Resources", active: true },
-                        { icon: <Calendar size={18} />, label: "Bookings" },
-                        { icon: <Wrench size={18} />, label: "Maintenance" },
+                        { icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+                        { icon: <Box size={18} />, label: 'Resources', active: true },
+                        { icon: <Calendar size={18} />, label: 'Bookings' },
+                        { icon: <Wrench size={18} />, label: 'Maintenance' },
                     ].map((item, idx) => (
                         <a key={idx} href="#" className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${item.active ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}>
                             {item.icon} {item.label}
@@ -140,7 +178,7 @@ export default function CampusDashboard() {
                             Resource Type <ChevronDown size={14} className="text-gray-400 group-hover:text-blue-500" />
                         </label>
                         <div className="space-y-1">
-                            {["All", "Academic Spaces", "Study & Library Spaces", "Sports & Fitness"].map((cat) => (
+                            {['All', ...CATEGORY_META.map(m => m.title)].map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => setActiveCategory(cat)}
@@ -159,14 +197,25 @@ export default function CampusDashboard() {
                             <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold">{minCapacity} pax</span>
                         </div>
                         <input
-                            type="range"
-                            min="0"
-                            max="500"
-                            step="10"
+                            type="range" min="0" max="500" step="10"
                             value={minCapacity}
                             onChange={(e) => setMinCapacity(parseInt(e.target.value))}
                             className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
+                    </div>
+
+                    {/* Location / Campus Filter */}
+                    <div className="space-y-2 px-4">
+                        <label className="text-xs font-semibold text-gray-700">Campus / Location</label>
+                        <select
+                            value={selectedCampus}
+                            onChange={(e) => setSelectedCampus(e.target.value)}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        >
+                            {campuses.map(c => (
+                                <option key={c} value={c}>{c === 'All' ? 'All Campuses' : c}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Quick Tags Toggle */}
@@ -174,11 +223,16 @@ export default function CampusDashboard() {
                         <label className="text-xs font-semibold text-gray-700">Preferences</label>
                         <div className="space-y-2">
                             {[
-                                { label: 'Air Conditioned', icon: <Wind size={12} /> },
-                                { label: 'High-speed WiFi', icon: <Wifi size={12} /> },
+                                { label: 'Air Conditioned', icon: <Wind size={12} />, value: 'AC' },
+                                { label: 'High-speed WiFi', icon: <Wifi size={12} />, value: 'Wifi' },
                             ].map((tag, i) => (
                                 <label key={i} className="flex items-center gap-3 text-xs text-gray-600 cursor-pointer hover:text-blue-600 transition-colors">
-                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <input
+                                        type="checkbox"
+                                        checked={activeTags.includes(tag.value)}
+                                        onChange={() => toggleTag(tag.value)}
+                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
                                     <span className="flex items-center gap-1.5">{tag.icon} {tag.label}</span>
                                 </label>
                             ))}
@@ -186,7 +240,7 @@ export default function CampusDashboard() {
                     </div>
 
                     <button
-                        onClick={() => { setActiveCategory("All"); setMinCapacity(0); }}
+                        onClick={resetFilters}
                         className="w-full py-2 text-xs text-gray-400 hover:text-blue-600 font-medium transition-colors"
                     >
                         Reset Filters
@@ -202,8 +256,10 @@ export default function CampusDashboard() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search resources, labs, equipment..."
-                            className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                         />
                     </div>
                     <div className="flex items-center gap-4">
@@ -226,10 +282,10 @@ export default function CampusDashboard() {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                         {[
-                            { label: "Total Resources", val: "350", color: "text-blue-600" },
-                            { label: "Available Now", val: "295", color: "text-green-600" },
-                            { label: "Most Used", val: "Auditorium", color: "text-orange-600" },
-                            { label: "Active Bookings", val: "45", color: "text-purple-600" }
+                            { label: 'Total Resources',  val: String(totalCount),  color: 'text-blue-600'   },
+                            { label: 'Available Now',    val: String(activeCount), color: 'text-green-600'  },
+                            { label: 'Most Used',        val: 'Auditorium',        color: 'text-orange-600' },
+                            { label: 'Active Bookings',  val: '45',                color: 'text-purple-600' },
                         ].map((stat, i) => (
                             <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
@@ -246,15 +302,20 @@ export default function CampusDashboard() {
                                     <span className="px-3 py-1 bg-orange-200 text-orange-800 rounded-full text-xs font-bold flex items-center gap-1 w-fit mb-4">
                                         <Mic2 size={12} /> EVENT ENABLED
                                     </span>
-                                    <h2 className="text-3xl font-black text-orange-900 mb-2">Main Auditorium SLIIT</h2>
-                                    <p className="text-orange-800/70 mb-4 max-w-md">State-of-the-art facility equipped with professional sound systems and 1000+ seating capacity.</p>
+                                    <h2 className="text-3xl font-black text-orange-900 mb-2">{auditorium.name || 'Main Auditorium SLIIT'}</h2>
+                                    <p className="text-orange-800/70 mb-4 max-w-md">State-of-the-art facility equipped with professional sound systems and {auditorium.cap ? `${auditorium.cap}+` : '1000+'} seating capacity.</p>
                                     <div className="flex gap-6 mb-6">
-                                        <div className="text-center"><p className="text-xs text-orange-800 font-bold uppercase">Capacity</p><p className="text-xl font-bold">1000+</p></div>
+                                        <div className="text-center"><p className="text-xs text-orange-800 font-bold uppercase">Capacity</p><p className="text-xl font-bold">{auditorium.cap ? `${auditorium.cap}+` : '1000+'}</p></div>
                                         <div className="text-center"><p className="text-xs text-orange-800 font-bold uppercase">Stage</p><p className="text-xl font-bold">Pro-Grade</p></div>
                                     </div>
                                     <div className="flex gap-3">
                                         <button className="px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition-colors">Create Event</button>
-                                        <button className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold border border-orange-200 hover:bg-orange-50 transition-colors">View Schedule</button>
+                                        <button
+                                            onClick={() => handleViewDetails('AUD_MAIN')}
+                                            className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold border border-orange-200 hover:bg-orange-50 transition-colors"
+                                        >
+                                            View Schedule
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="hidden md:block w-64 h-40 bg-white/50 rounded-2xl border border-orange-200 p-4">
@@ -277,7 +338,9 @@ export default function CampusDashboard() {
                                     <h3 className="text-lg font-bold">{cat.title}</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {cat.items.map(item => <ResourceCard key={item.id} item={item} />)}
+                                    {cat.items.map(item => (
+                                        <ResourceCard key={item.id} item={item} onViewDetails={handleViewDetails} />
+                                    ))}
                                 </div>
                             </section>
                         ))
@@ -285,18 +348,18 @@ export default function CampusDashboard() {
                         <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
                             <Box className="mx-auto text-gray-300 mb-4" size={48} />
                             <p className="text-gray-500 font-medium">No resources match your current filters.</p>
-                            <button onClick={() => { setActiveCategory("All"); setMinCapacity(0); }} className="mt-4 text-blue-600 font-bold text-sm">Clear all filters</button>
+                            <button onClick={resetFilters} className="mt-4 text-blue-600 font-bold text-sm">Clear all filters</button>
                         </div>
                     )}
 
-                    {/* Student Services (Small Slots) */}
+                    {/* Student Medical Services */}
                     <section className="mb-10">
                         <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
                             <Stethoscope className="text-pink-500" /> Student Medical Services
                         </h3>
                         <div className="bg-white p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
-                                <p className="font-bold">University Health Center</p>
+                                <p className="font-bold">{medCenter.name || 'University Health Center'}</p>
                                 <p className="text-sm text-gray-500">Dr. Aruni Perera (Available Today)</p>
                             </div>
                             <div className="flex gap-2">
@@ -311,6 +374,14 @@ export default function CampusDashboard() {
                     </section>
                 </div>
             </main>
+
+            {/* Resource Detail Modal */}
+            {selectedResource && (
+                <ResourceDetailModal
+                    resource={selectedResource}
+                    onClose={() => setSelectedResource(null)}
+                />
+            )}
         </div>
     );
 }
