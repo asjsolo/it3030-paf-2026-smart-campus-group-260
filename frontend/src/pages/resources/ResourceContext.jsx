@@ -1,162 +1,179 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
-const weekdayHours = [
-    { day: 'Monday', start: '08:00', end: '18:00' },
-    { day: 'Tuesday', start: '08:00', end: '18:00' },
-    { day: 'Wednesday', start: '08:00', end: '18:00' },
-    { day: 'Thursday', start: '08:00', end: '18:00' },
-    { day: 'Friday', start: '08:00', end: '17:00' },
-];
-
-const initialResources = [
-    // ── Academic Spaces ────────────────────────────────────────────────
-    {
-        id: 'LH301', name: 'Lecture Hall LH301', category: 'Academic Spaces',
-        type: 'Lecture Hall', campus: 'Malabe', building: 'Main Block', floor: 'Floor 3',
-        loc: 'Main Block, Floor 3', cap: 120, status: 'Active', tags: ['AC', 'Wifi'],
-        specs: 'Smart board, overhead projector, tiered seating for 120 students.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    {
-        id: 'LAB202', name: 'Computing Lab 202', category: 'Academic Spaces',
-        type: 'Lab', campus: 'Malabe', building: 'IT Building', floor: 'Floor 2',
-        loc: 'IT Building, Floor 2', cap: 50, status: 'Active', tags: ['PC', 'Wifi', 'AC'],
-        specs: '50 Windows PCs with dual monitors, high-speed internet access.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    {
-        id: 'MR_A101', name: 'Meeting Room A101', category: 'Academic Spaces',
-        type: 'Meeting Room', campus: 'Malabe', building: 'Admin Block', floor: 'Floor 1',
-        loc: 'Admin Block, Floor 1', cap: 20, status: 'Active', tags: ['Wifi', 'Whiteboard', 'AC'],
-        specs: 'Video conferencing unit, interactive whiteboard, projector screen.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    // ── Study & Library Spaces ─────────────────────────────────────────
-    {
-        id: 'LIB_MAIN', name: 'Main Library', category: 'Study & Library Spaces',
-        type: 'Study Area', campus: 'Malabe', building: 'Library Block', floor: 'Floor 2',
-        loc: 'Library Block, Floor 2', cap: 300, status: 'Active', tags: ['Wifi', 'AC'],
-        specs: '300 silent reading seats, reference section, printing services.',
-        noise: 'Silent',
-        availabilityWindows: [
-            { day: 'Monday', start: '07:30', end: '21:00' },
-            { day: 'Tuesday', start: '07:30', end: '21:00' },
-            { day: 'Wednesday', start: '07:30', end: '21:00' },
-            { day: 'Thursday', start: '07:30', end: '21:00' },
-            { day: 'Friday', start: '07:30', end: '20:00' },
-            { day: 'Saturday', start: '09:00', end: '17:00' },
-        ],
-        archived: false,
-    },
-    {
-        id: 'GSR401', name: 'Group Study Room 401', category: 'Study & Library Spaces',
-        type: 'Meeting Room', campus: 'Malabe', building: 'Library Block', floor: 'Floor 4',
-        loc: 'Library Block, Floor 4', cap: 8, status: 'Active', tags: ['Whiteboard', 'Wifi'],
-        specs: 'Whiteboard, wall-mounted TV screen, marker set.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    // ── Sports & Fitness ──────────────────────────────────────────────
-    {
-        id: 'GYM01', name: 'Student Gym', category: 'Sports & Fitness',
-        type: 'Fitness', campus: 'Malabe', building: 'Sports Complex', floor: 'Ground',
-        loc: 'Sports Complex', cap: null, status: 'Active', tags: ['AC'],
-        specs: 'Cardio machines, free weights, resistance training equipment.',
-        crowd: 'Medium',
-        availabilityWindows: [
-            { day: 'Monday', start: '06:00', end: '21:00' },
-            { day: 'Tuesday', start: '06:00', end: '21:00' },
-            { day: 'Wednesday', start: '06:00', end: '21:00' },
-            { day: 'Thursday', start: '06:00', end: '21:00' },
-            { day: 'Friday', start: '06:00', end: '20:00' },
-            { day: 'Saturday', start: '08:00', end: '18:00' },
-            { day: 'Sunday', start: '08:00', end: '14:00' },
-        ],
-        archived: false,
-    },
-    {
-        id: 'TC02', name: 'Tennis Court 02', category: 'Sports & Fitness',
-        type: 'Sports Court', campus: 'Malabe', building: 'Sports Complex', floor: 'Outdoor',
-        loc: 'Sports Complex, Outdoor', cap: 4, status: 'Active', tags: [],
-        specs: 'Outdoor floodlit hard court, equipment rental available at counter.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    // ── Student Medical Services ───────────────────────────────────────
-    {
-        id: 'MED01', name: 'University Health Center', category: 'Student Medical Services',
-        type: 'Medical', campus: 'Malabe', building: 'Admin Block', floor: 'Ground Floor',
-        loc: 'Admin Block, Ground Floor', cap: 10, status: 'Active', tags: ['AC'],
-        specs: 'General consultation, first aid, pharmacy counter.',
-        availabilityWindows: [
-            { day: 'Monday', start: '09:00', end: '16:00' },
-            { day: 'Tuesday', start: '09:00', end: '16:00' },
-            { day: 'Wednesday', start: '09:00', end: '16:00' },
-            { day: 'Thursday', start: '09:00', end: '16:00' },
-            { day: 'Friday', start: '09:00', end: '15:00' },
-        ],
-        archived: false,
-    },
-    // ── Events & Auditorium ────────────────────────────────────────────
-    {
-        id: 'AUD_MAIN', name: 'Main Auditorium SLIIT', category: 'Events & Auditorium',
-        type: 'Auditorium', campus: 'Malabe', building: 'Main Building', floor: 'Ground Floor',
-        loc: 'Main Building, Ground Floor', cap: 1000, status: 'Active',
-        tags: ['AC', 'Wifi', 'Stage', 'Sound System'],
-        specs: 'Pro-grade stage, surround sound, 1000+ seats, live streaming capable.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    // ── Equipment ─────────────────────────────────────────────────────
-    {
-        id: 'EQ_PROJ01', name: 'Projector Pro-X', category: 'Equipment',
-        type: 'Equipment', campus: 'Malabe', building: 'Main Library', floor: 'Floor 1',
-        loc: 'Main Library, Equipment Room', cap: null, status: 'Out of Service',
-        tags: ['4K', 'HDMI'], specs: '4K UHD, HDMI/VGA input, 5000 lumens, carry bag included.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    {
-        id: 'EQ_CAM01', name: 'Canon DSLR Camera', category: 'Equipment',
-        type: 'Equipment', campus: 'Malabe', building: 'Media Lab', floor: 'Floor 2',
-        loc: 'Media Lab, Floor 2', cap: null, status: 'Active',
-        tags: ['4K', 'HD'], specs: '24.2MP, 4K video, 18-55mm kit lens, tripod included.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-    {
-        id: 'EQ_LAP01', name: 'Dell Laptop L04', category: 'Equipment',
-        type: 'Equipment', campus: 'Malabe', building: 'IT Building', floor: 'Floor 1',
-        loc: 'IT Building, Equipment Room', cap: null, status: 'Active',
-        tags: ['Wifi'], specs: 'Intel i7 12th Gen, 16GB RAM, 512GB NVMe SSD, Windows 11.',
-        availabilityWindows: weekdayHours, archived: false,
-    },
-];
+// Backend properties
+const API_URL = 'http://localhost:8082/api/resources';
 
 const ResourceContext = createContext(null);
 
+// Mapper: Frontend -> Backend
+const toBackend = (frontendData) => {
+    // Determine Backend Enum Type based on Category
+    let backendType = 'LECTURE_HALL';
+    if (frontendData.category === 'Study & Library Spaces') backendType = 'STUDY_AREA';
+    else if (frontendData.category === 'Sports & Fitness') backendType = 'FITNESS';
+    else if (frontendData.category === 'Student Medical Services') backendType = 'MEDICAL';
+    else if (frontendData.category === 'Events & Auditorium') backendType = 'AUDITORIUM';
+    else if (frontendData.category === 'Equipment') backendType = 'EQUIPMENT';
+
+    // Pack extra fields into JSON description
+    const extraData = {
+        category: frontendData.category,
+        typeStr: frontendData.type,
+        specs: frontendData.specs || '',
+        tags: frontendData.tags || [],
+        archived: frontendData.archived || false
+    };
+
+    // Location string (Campus, Building, Floor)
+    const locArr = [frontendData.campus, frontendData.building, frontendData.floor].filter(Boolean);
+
+    // Normalize Status
+    let backendStatus = 'ACTIVE';
+    if (frontendData.status === 'Out of Service') backendStatus = 'OUT_OF_SERVICE';
+    if (frontendData.status === 'Under Maintenance' || frontendData.status === 'Maintenance') backendStatus = 'UNDER_MAINTENANCE';
+
+    return {
+        name: frontendData.name,
+        type: backendType,
+        capacity: frontendData.cap || null,
+        location: locArr.join('|'), // Using pipe for easy splitting
+        description: JSON.stringify(extraData),
+        availabilityWindows: JSON.stringify(frontendData.availabilityWindows || []),
+        status: backendStatus // Sent for PUT/PATCH
+    };
+};
+
+// Mapper: Backend -> Frontend
+const toFrontend = (backendData) => {
+    // Parse extra fields from Description
+    let extra = {};
+    try {
+        if (backendData.description && backendData.description.startsWith('{')) {
+            extra = JSON.parse(backendData.description);
+        }
+    } catch (e) {
+        console.error("Failed to parse description JSON", e);
+    }
+
+    // Parse location parts
+    const locParts = (backendData.location || '').split('|');
+    const campus = locParts[0] || '';
+    const building = locParts[1] || '';
+    const floor = locParts[2] || '';
+
+    // Constructed location display string (e.g. "IT Building, Floor 2")
+    const locDisplay = [building, floor].filter(Boolean).join(', ');
+
+    // Parse availability
+    let parsedWindows = [];
+    try {
+        parsedWindows = backendData.availabilityWindows ? JSON.parse(backendData.availabilityWindows) : [];
+    } catch (e) {}
+
+    // Map status back
+    let displayStatus = 'Active';
+    if (backendData.status === 'OUT_OF_SERVICE') displayStatus = 'Out of Service';
+    if (backendData.status === 'UNDER_MAINTENANCE') displayStatus = 'Under Maintenance';
+
+    return {
+        id: String(backendData.id),
+        name: backendData.name,
+        category: extra.category || 'Academic Spaces',
+        type: extra.typeStr || 'Room',
+        campus: campus,
+        building: building,
+        floor: floor,
+        loc: locDisplay || campus || 'Unknown',
+        cap: backendData.capacity || null,
+        status: displayStatus,
+        specs: extra.specs || '',
+        tags: extra.tags || [],
+        availabilityWindows: parsedWindows,
+        archived: extra.archived || false,
+    };
+};
+
 export function ResourceProvider({ children }) {
-    const [resources, setResources] = useState(initialResources);
+    const [resources, setResources] = useState([]);
 
-    const addResource = (newRes) => {
-        const id = `RES-${Date.now().toString(36).toUpperCase()}`;
-        const loc = `${newRes.building}${newRes.floor ? ', ' + newRes.floor : ''}`;
-        setResources(prev => [...prev, { ...newRes, id, loc, archived: false }]);
+    // Fetch on Mount
+    useEffect(() => {
+        fetchAll();
+    }, []);
+
+    const fetchAll = async () => {
+        try {
+            // Using size=100 for now to get all items without pagination logic on frontend frontend yet
+            const res = await axios.get(`${API_URL}?size=100`);
+            const mapped = res.data.content.map(toFrontend);
+            setResources(mapped);
+        } catch (err) {
+            console.error("Failed to fetch resources:", err);
+        }
     };
 
-    const updateResource = (id, updatedData) => {
-        setResources(prev => prev.map(r => {
-            if (r.id !== id) return r;
-            const loc = `${updatedData.building || r.building}${(updatedData.floor || r.floor) ? ', ' + (updatedData.floor || r.floor) : ''}`;
-            return { ...r, ...updatedData, loc };
-        }));
+    const addResource = async (newRes) => {
+        try {
+            const payload = toBackend(newRes);
+            const res = await axios.post(API_URL, payload);
+            
+            // If the status isn't ACTIVE, we must patch it immediately since POST forces ACTIVE in backend
+            if (payload.status !== 'ACTIVE') {
+                 await axios.patch(`${API_URL}/${res.data.id}/status?status=${payload.status}`);
+            }
+
+            fetchAll(); // Reload to get true server state
+        } catch (err) {
+            console.error("Failed to add resource:", err);
+            alert("Error adding resource check console.");
+        }
     };
 
-    const archiveResource = (id) => {
-        setResources(prev => prev.map(r => r.id === id ? { ...r, archived: true } : r));
+    const updateResource = async (id, updatedData) => {
+        try {
+            // Find existing to merge context (for instance, we need to send name/location even if updating just one field)
+            const existing = resources.find(r => r.id === id);
+            const merged = { ...existing, ...updatedData };
+            const payload = toBackend(merged);
+
+            // PUT updates data
+            await axios.put(`${API_URL}/${id}`, payload);
+            
+            // If status changed, PATCH it
+            if (updatedData.status && existing.status !== updatedData.status) {
+                await axios.patch(`${API_URL}/${id}/status?status=${payload.status}`);
+            }
+
+            fetchAll();
+        } catch (err) {
+            console.error("Failed to update resource:", err);
+        }
     };
 
-    const deleteResource = (id) => {
-        setResources(prev => prev.filter(r => r.id !== id));
+    const archiveResource = async (id) => {
+        try {
+            const existing = resources.find(r => r.id === id);
+            const merged = { ...existing, archived: true };
+            const payload = toBackend(merged);
+            await axios.put(`${API_URL}/${id}`, payload);
+            fetchAll();
+        } catch (err) {
+            console.error("Failed to archive:", err);
+        }
+    };
+
+    const deleteResource = async (id) => {
+        try {
+            await axios.delete(`${API_URL}/${id}`);
+            fetchAll();
+        } catch (err) {
+            console.error("Failed to delete:", err);
+        }
     };
 
     return (
-        <ResourceContext.Provider value={{ resources, addResource, updateResource, archiveResource, deleteResource }}>
+        <ResourceContext.Provider value={{ resources, addResource, updateResource, archiveResource, deleteResource, refreshData: fetchAll }}>
             {children}
         </ResourceContext.Provider>
     );
@@ -167,3 +184,4 @@ export function useResources() {
     if (!ctx) throw new Error('useResources must be used within a ResourceProvider');
     return ctx;
 }
+
