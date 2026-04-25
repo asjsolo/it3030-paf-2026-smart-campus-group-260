@@ -6,6 +6,9 @@ import TicketDashboard from './pages/TicketDashboard';
 import TicketDetails from './pages/TicketDetails';
 import MockLogin from './pages/MockLogin'; // <-- IMPORT THE MOCK LOGIN
 import StudentDashboard from './pages/StudentDashboard';
+import BookingRequestForm from './pages/BookingRequestForm';
+import MyBookings from './pages/MyBookings';
+import AdminBookings from './pages/AdminBookings';
 
 function App() {
   // Read from local storage on startup
@@ -32,6 +35,11 @@ function App() {
               <Route path="/my-tickets" element={<StudentDashboard />} /> {/* THE NEW ROUTE */}
               <Route path="/dashboard" element={<TicketDashboard />} />
               <Route path="/ticket/:id" element={<TicketDetails />} />
+              
+              {/* Booking Module Routes */}
+              <Route path="/bookings/request" element={<BookingRequestForm />} />
+              <Route path="/bookings/my" element={<MyBookings />} />
+              <Route path="/admin/bookings" element={<AdminBookings />} />
             </>
           )}
         </Routes>

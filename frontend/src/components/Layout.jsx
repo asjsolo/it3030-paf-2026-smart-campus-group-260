@@ -46,9 +46,14 @@ export default function Layout({ children, role }) {
         <nav style={{ flex: 1 }}>
           {/* Technicians ONLY get the Master Dashboard */}
           {role === 'TECHNICIAN' && (
-            <Link to="/dashboard" style={getLinkStyle('/dashboard')}>
-              📊 Master Dashboard
-            </Link>
+            <>
+              <Link to="/dashboard" style={getLinkStyle('/dashboard')}>
+                📊 Master Dashboard
+              </Link>
+              <Link to="/admin/bookings" style={getLinkStyle('/admin/bookings')}>
+                📋 Manage Bookings
+              </Link>
+            </>
           )}
 
           {/* Students get their Personal Dashboard AND the Create Ticket button */}
@@ -59,6 +64,12 @@ export default function Layout({ children, role }) {
               </Link>
               <Link to="/create-ticket" style={getLinkStyle('/create-ticket')}>
                 📝 Create a Ticket
+              </Link>
+              <Link to="/bookings/my" style={getLinkStyle('/bookings/my')}>
+                🗂️ My Bookings
+              </Link>
+              <Link to="/bookings/request" style={getLinkStyle('/bookings/request')}>
+                📅 Request Booking
               </Link>
             </>
           )}
