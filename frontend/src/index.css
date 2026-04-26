@@ -7,26 +7,31 @@
 }
 
 :root {
-  /* Modern Purple/Blue Theme */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --primary-alpha: rgba(99, 102, 241, 0.15);
+  /* Modern Emerald/Teal Theme (Uni-Nest Style) */
+  --primary: #10b981; /* emerald-500 */
+  --primary-light: #34d399; /* emerald-400 */
+  --primary-dark: #059669; /* emerald-600 */
+  --primary-alpha: rgba(16, 185, 129, 0.15);
   
-  --secondary: #ec4899;
+  --secondary: #0f766e; /* teal-700 */
   
-  --bg-gradient-start: #eef2ff;
-  --bg-gradient-end: #f8fafc;
+  --bg-gradient-start: #f8fafc; /* slate-50 */
+  --bg-gradient-end: #ffffff; /* white */
   
   --surface: #ffffff;
-  --surface-hover: #f8fafc;
+  --surface-hover: #f1f5f9; /* slate-100 */
   
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --sidebar-bg: #0f172a; /* slate-900 */
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-text: #94a3b8; /* slate-400 */
+  --sidebar-text-active: #ffffff;
   
-  --border: #e2e8f0;
-  --border-focus: #c7d2fe;
+  --text-main: #0f172a; /* slate-900 */
+  --text-muted: #64748b; /* slate-500 */
+  --text-light: #94a3b8; /* slate-400 */
+  
+  --border: #e2e8f0; /* slate-200 */
+  --border-focus: #6ee7b7; /* emerald-300 */
   
   --success: #10b981;
   --success-bg: #d1fae5;
@@ -37,21 +42,22 @@
   --neutral: #64748b;
   --neutral-bg: #f1f5f9;
 
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-sm: 12px;
+  --radius-md: 24px;
+  --radius-lg: 32px; /* 2rem */
+  --radius-xl: 40px; /* 2.5rem */
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+  --shadow-sm: 0 4px 6px -1px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1);
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.25);
 }
 
 body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color: var(--text-main);
-  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  background: var(--bg-gradient-start);
   background-attachment: fixed;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -67,12 +73,11 @@ body {
 
 .sidebar {
   width: 280px;
-  background-color: var(--surface);
-  border-right: 1px solid var(--border);
+  background-color: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.02);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
   z-index: 10;
 }
 
@@ -83,11 +88,15 @@ body {
 .sidebar-brand {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--primary-dark);
+  color: var(--surface);
   display: flex;
   align-items: center;
   gap: 12px;
   letter-spacing: -0.5px;
+}
+
+.sidebar-brand svg {
+  color: var(--primary);
 }
 
 .sidebar-nav {
@@ -105,20 +114,20 @@ body {
   gap: 14px;
   padding: 14px 16px;
   text-decoration: none;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-link:hover {
-  background-color: var(--surface-hover);
-  color: var(--primary);
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text-active);
   transform: translateX(4px);
 }
 
 .nav-link.active {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
   box-shadow: 0 4px 12px var(--primary-alpha);
 }
@@ -181,17 +190,19 @@ body {
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.05);
 }
 
 .page-title {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
   color: var(--text-main);
   margin-bottom: 8px;
   letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .page-subtitle {
@@ -215,7 +226,7 @@ body {
 
 .form-control {
   width: 100%;
-  padding: 14px 16px;
+  padding: 16px 20px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: inherit;
@@ -242,8 +253,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 24px;
-  border-radius: var(--radius-md);
+  padding: 14px 28px;
+  border-radius: var(--radius-full); /* Pillow buttons */
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
@@ -254,12 +265,12 @@ body {
 .btn-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
-  box-shadow: 0 4px 12px var(--primary-alpha);
+  box-shadow: 0 8px 16px var(--primary-alpha);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.4);
 }
 
 .btn-danger {
@@ -280,7 +291,7 @@ body {
 
 .btn-outline:hover:not(:disabled) {
   border-color: var(--primary);
-  color: var(--primary);
+  color: var(--primary-dark);
   background-color: var(--primary-alpha);
 }
 
@@ -302,7 +313,7 @@ body {
 }
 
 .badge-pending { background-color: var(--warning-bg); color: var(--warning); }
-.badge-approved { background-color: var(--success-bg); color: var(--success); }
+.badge-approved { background-color: var(--success-bg); color: var(--success-dark); }
 .badge-rejected { background-color: var(--danger-bg); color: var(--danger); }
 .badge-cancelled { background-color: var(--neutral-bg); color: var(--neutral); }
 
@@ -382,13 +393,13 @@ body {
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  color: var(--primary-dark);
 }
 
 /* --- Split Login Screen --- */
@@ -399,8 +410,8 @@ body {
 }
 
 .login-left {
-  flex: 0 0 45%; /* Reduced from 50% to 45% so it's slightly smaller */
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  flex: 0 0 45%; 
+  background: var(--sidebar-bg); /* Dark slate like sidebar */
   padding: 60px;
   color: white;
   display: flex;
@@ -412,19 +423,8 @@ body {
 
 @media (max-width: 900px) {
   .login-left {
-    display: none; /* Hide on small screens */
+    display: none; 
   }
-}
-
-.login-left::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-  z-index: 1;
 }
 
 .login-left-content {
@@ -435,16 +435,21 @@ body {
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 20px;
   border-radius: var(--radius-md);
   margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 16px;
+  transition: all 0.2s;
+}
+
+.feature-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+  border-color: var(--primary);
 }
 
 .login-right {
@@ -453,7 +458,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  background: var(--bg-gradient-end); /* Clean background for the form area */
+  background: var(--surface-hover); 
 }
 
 .role-selector {
@@ -465,7 +470,7 @@ body {
 
 .role-card {
   border: 2px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: 24px;
   text-align: center;
   cursor: pointer;
@@ -490,8 +495,8 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -500,7 +505,7 @@ body {
 
 .modal-content {
   background: var(--surface);
-  padding: 32px;
+  padding: 40px;
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 500px;

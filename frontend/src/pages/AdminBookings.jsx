@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { getAllBookings, approveBooking, rejectBooking, deleteBooking } from '../api/bookingApi';
+import { CalendarCheck, Filter, Search, XCircle, Trash2, CheckCircle2 } from 'lucide-react';
+import Toast from '../components/Toast';
+import StatusBadge from '../components/StatusBadge';
+import EmptyState from '../components/EmptyState';
+import BookingStatusTimeline from '../components/BookingStatusTimeline';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   
   // Filters
   const [filterStatus, setFilterStatus] = useState('');
@@ -18,7 +22,7 @@ export default function AdminBookings() {
   const [rejectReason, setRejectReason] = useState('');
   
   // Notification
-  const [notification, setNotification] = useState('');
+  const [toast, setToast] = useState(null);
 
   const fetchBookings = async () => {
     try {
@@ -26,7 +30,7 @@ export default function AdminBookings() {
       setBookings(data);
       setFilteredBookings(data);
     } catch (err) {
-      setError('Failed to fetch bookings.');
+      setToast({ message: 'Failed to fetch bookings.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -36,7 +40,6 @@ export default function AdminBookings() {
     fetchBookings();
   }, []);
 
-  // Filter effect
   useEffect(() => {
     let result = bookings;
     if (filterStatus) result = result.filter(b => b.status === filterStatus);
@@ -45,18 +48,13 @@ export default function AdminBookings() {
     setFilteredBookings(result);
   }, [filterStatus, filterDate, filterResource, bookings]);
 
-  const showNotification = (msg) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(''), 3000);
-  };
-
   const handleApprove = async (id) => {
     try {
       await approveBooking(id, 'Approved by Admin');
-      showNotification('✅ Booking Approved Successfully');
+      setToast({ message: 'Booking approved successfully', type: 'success' });
       fetchBookings();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to approve booking.');
+      setToast({ message: err.response?.data?.message || 'Failed to approve booking.', type: 'error' });
     }
   };
 
@@ -68,16 +66,16 @@ export default function AdminBookings() {
 
   const confirmReject = async () => {
     if (!rejectReason.trim()) {
-      alert('Please provide a reason for rejection.');
+      setToast({ message: 'Rejection reason is required.', type: 'warning' });
       return;
     }
     try {
       await rejectBooking(activeBookingId, rejectReason);
       setRejectModalOpen(false);
-      showNotification('🚫 Booking Rejected');
+      setToast({ message: 'Booking rejected successfully', type: 'info' });
       fetchBookings();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject booking.');
+      setToast({ message: err.response?.data?.message || 'Failed to reject booking.', type: 'error' });
     }
   };
 
@@ -85,32 +83,27 @@ export default function AdminBookings() {
     if (window.confirm('Are you sure you want to delete this booking permanently?')) {
       try {
         await deleteBooking(id);
-        showNotification('🗑️ Booking Deleted');
+        setToast({ message: 'Booking deleted', type: 'info' });
         fetchBookings();
       } catch (err) {
-        alert(err.response?.data?.message || 'Failed to delete booking.');
+        setToast({ message: err.response?.data?.message || 'Failed to delete booking.', type: 'error' });
       }
     }
   };
 
-  const getStatusBadge = (status) => {
-    return <span className={`badge badge-${status.toLowerCase()}`}>{status}</span>;
-  };
-
-  if (loading) return <div className="empty-state">⏳ Loading bookings...</div>;
+  if (loading) return <div className="empty-state" style={{ border: 'none' }}>Loading bookings...</div>;
 
   return (
     <div className="card">
-      <h2 className="page-title">📋 Admin Booking Management</h2>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
+      <h2 className="page-title"><CalendarCheck size={28} className="text-primary" /> Admin Booking Management</h2>
       <p className="page-subtitle">Review, approve, and manage resource bookings across the campus.</p>
       
-      {notification && <div className="toast">{notification}</div>}
-      {error && <div className="alert alert-error">{error}</div>}
-      
       {/* Filters Section */}
-      <div className="form-row" style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-color)', borderRadius: 'var(--radius-sm)' }}>
+      <div className="form-row" style={{ marginBottom: '32px', padding: '24px', backgroundColor: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.8rem' }}>Filter by Status</label>
+          <label className="form-label" style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Filter size={14} /> Filter by Status</label>
           <select className="form-control" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="PENDING">Pending</option>
@@ -120,19 +113,21 @@ export default function AdminBookings() {
           </select>
         </div>
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.8rem' }}>Filter by Date</label>
+          <label className="form-label" style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Filter size={14} /> Filter by Date</label>
           <input type="date" className="form-control" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
         </div>
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.8rem' }}>Search Resource</label>
+          <label className="form-label" style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Search size={14} /> Search Resource</label>
           <input type="text" className="form-control" placeholder="Room 101..." value={filterResource} onChange={e => setFilterResource(e.target.value)} />
         </div>
       </div>
 
       {filteredBookings.length === 0 ? (
-        <div className="empty-state">
-          <h3>No bookings match your filters.</h3>
-        </div>
+        <EmptyState 
+          icon={<Search size={48} />}
+          title="No bookings match your filters."
+          description="Try clearing your filters to see more results."
+        />
       ) : (
         <div className="table-container">
           <table className="table">
@@ -141,7 +136,7 @@ export default function AdminBookings() {
                 <th>Resource</th>
                 <th>Requested By</th>
                 <th>Date & Time</th>
-                <th>Status</th>
+                <th>Status / Timeline</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -149,7 +144,8 @@ export default function AdminBookings() {
               {filteredBookings.map(booking => (
                 <tr key={booking.id}>
                   <td>
-                    <strong>{booking.resourceId}</strong><br/>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{booking.resourceType || 'RESOURCE'}</span><br/>
+                    <strong style={{ fontSize: '1.05rem', color: 'var(--text-main)' }}>{booking.resourceId}</strong><br/>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Attendees: {booking.expectedAttendees}</span>
                   </td>
                   <td>{booking.requestedBy}</td>
@@ -158,9 +154,12 @@ export default function AdminBookings() {
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{booking.startTime} - {booking.endTime}</span>
                   </td>
                   <td>
-                    {getStatusBadge(booking.status)}
+                    <StatusBadge status={booking.status} />
+                    <div style={{ marginTop: '4px' }}>
+                      <BookingStatusTimeline status={booking.status} />
+                    </div>
                     {booking.decisionReason && (
-                      <div style={{ marginTop: '4px', fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: '150px' }}>
+                      <div style={{ marginTop: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '200px', lineHeight: '1.4' }}>
                         Note: {booking.decisionReason}
                       </div>
                     )}
@@ -169,16 +168,16 @@ export default function AdminBookings() {
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {booking.status === 'PENDING' && (
                         <>
-                          <button onClick={() => handleApprove(booking.id)} className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
-                            Approve
+                          <button onClick={() => handleApprove(booking.id)} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+                            <CheckCircle2 size={16} /> Approve
                           </button>
-                          <button onClick={() => openRejectModal(booking.id)} className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
-                            Reject
+                          <button onClick={() => openRejectModal(booking.id)} className="btn btn-danger" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+                            <XCircle size={16} /> Reject
                           </button>
                         </>
                       )}
-                      <button onClick={() => handleDelete(booking.id)} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
-                        Delete
+                      <button onClick={() => handleDelete(booking.id)} className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+                        <Trash2 size={16} /> Delete
                       </button>
                     </div>
                   </td>
@@ -193,8 +192,10 @@ export default function AdminBookings() {
       {rejectModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{ marginBottom: '16px' }}>Reject Booking</h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '16px' }}>Please provide a reason for rejecting this request.</p>
+            <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <XCircle size={24} className="text-danger" /> Reject Booking
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Please provide a reason for rejecting this request.</p>
             
             <div className="form-group">
               <label className="form-label">Rejection Reason</label>
@@ -207,7 +208,7 @@ export default function AdminBookings() {
               ></textarea>
             </div>
             
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
               <button className="btn btn-outline" onClick={() => setRejectModalOpen(false)}>Cancel</button>
               <button className="btn btn-danger" onClick={confirmReject}>Confirm Rejection</button>
             </div>

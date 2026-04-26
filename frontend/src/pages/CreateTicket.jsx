@@ -1,62 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-
-// --- Our Custom Glassmorphism Dropdown Component ---
-const CustomSelect = ({ value, options, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div style={{ position: 'relative' }} ref={dropdownRef}>
-      <div 
-        className="input-field" 
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-      >
-        {value}
-        <span style={{ 
-          fontSize: '0.8rem', 
-          color: 'var(--text-muted)',
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0)', 
-          transition: 'transform 0.3s ease' 
-        }}>
-          ▼
-        </span>
-      </div>
-      
-      {isOpen && (
-        <ul className="custom-select-menu">
-          {options.map((opt) => (
-            <li 
-              key={opt} 
-              className="custom-select-option"
-              onClick={() => {
-                onChange(opt);
-                setIsOpen(false);
-              }}
-              style={{ 
-                background: value === opt ? 'rgba(139, 92, 246, 0.15)' : 'transparent',
-                borderLeft: value === opt ? '3px solid var(--primary-accent)' : '3px solid transparent'
-              }}
-            >
-              {opt}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
+import { 
+  FileText, 
+  AlignLeft, 
+  Layers, 
+  AlertCircle, 
+  MapPin, 
+  Phone, 
+  UploadCloud, 
+  X, 
+  Image as ImageIcon,
+  Ticket
+} from 'lucide-react';
+import Toast from '../components/Toast';
 
 export default function CreateTicket() {
   const [title, setTitle] = useState('');
@@ -66,44 +22,65 @@ export default function CreateTicket() {
   const [preferredContact, setPreferredContact] = useState('');
   const [location, setLocation] = useState('');
   
-  // CHANGED: We now store an ARRAY of images instead of a single image
   const [images, setImages] = useState([]); 
-  const [statusMessage, setStatusMessage] = useState('');
+  const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // --- NEW: Handle Multiple Image Selection ---
+  // Validation state
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (!description.trim()) newErrors.description = 'Description is required';
+    if (!location.trim()) newErrors.location = 'Location is required';
+    if (!preferredContact.trim()) newErrors.preferredContact = 'Contact info is required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleImageSelection = (e) => {
     const selectedFiles = Array.from(e.target.files);
     
-    // Check if adding these files exceeds the 3-image limit
     if (images.length + selectedFiles.length > 3) {
-      setStatusMessage('Error: You can only upload a maximum of 3 images per ticket.');
+      setToast({ message: 'You can only upload a maximum of 3 images.', type: 'error' });
       return;
     }
 
-    // Validate file sizes (Max 10MB per file)
     const validFiles = selectedFiles.filter(file => {
       if (file.size > 10 * 1024 * 1024) {
-        setStatusMessage(`Error: "${file.name}" is too large! Max size is 10MB.`);
+        setToast({ message: `"${file.name}" is too large! Max size is 10MB.`, type: 'error' });
         return false;
       }
       return true;
     });
 
-    // Add valid files to state
-    setImages((prevImages) => [...prevImages, ...validFiles]);
-    setStatusMessage(''); // Clear any previous errors
+    const newImages = validFiles.map(file => Object.assign(file, {
+      preview: URL.createObjectURL(file)
+    }));
+
+    setImages((prevImages) => [...prevImages, ...newImages]);
+    
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   };
 
-  // --- NEW: Remove an image before submitting ---
   const removeImage = (indexToRemove) => {
     setImages(images.filter((_, index) => index !== indexToRemove));
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatusMessage('Submitting ticket details...');
+    if (!validateForm()) {
+      setToast({ message: 'Please fill in all required fields.', type: 'warning' });
+      return;
+    }
 
-    // STEP 1: Send the text data to create the base Ticket
+    setLoading(true);
+
     const ticketData = new FormData();
     ticketData.append('title', title);
     ticketData.append('description', description);
@@ -113,27 +90,19 @@ export default function CreateTicket() {
     ticketData.append('location', location);
 
     try {
-      // FIX 1: Removed the hardcoded headers so Axios can set the boundary automatically!
       const ticketResponse = await axios.post('http://localhost:8082/api/tickets', ticketData);
-      
       const newTicketId = ticketResponse.data.id; 
 
-      // STEP 2: If there are images, loop through and upload them to the Attachment Controller
       if (images.length > 0) {
-        setStatusMessage('Uploading images safely...');
-        
         for (let i = 0; i < images.length; i++) {
           const imageData = new FormData();
           imageData.append('file', images[i]);
-          
-          // FIX 2: Removed the hardcoded headers here too!
           await axios.post(`http://localhost:8082/api/tickets/${newTicketId}/attachments`, imageData);
         }
       }
 
-      setStatusMessage('Ticket and images submitted successfully! 🎉');
+      setToast({ message: 'Ticket submitted successfully! 🎉', type: 'success' });
       
-      // Reset the form
       setTitle('');
       setDescription('');
       setCategory('Hardware');
@@ -141,142 +110,234 @@ export default function CreateTicket() {
       setPreferredContact('');
       setLocation('');
       setImages([]); 
+      setErrors({});
       
     } catch (error) {
       console.error('Error uploading ticket:', error);
-      setStatusMessage('Something went wrong. Please check the console and try again.');
+      setToast({ message: 'Something went wrong. Please try again.', type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="card" style={{ maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '4px' }}>Create Incident Ticket</h2>
-      <span className="helper-text" style={{ marginBottom: '24px', fontSize: '0.95rem' }}>
-        Fill in the details below. You can attach up to 3 images as evidence.
-      </span>
-      
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', position: 'relative' }}>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      <div className="card" style={{ padding: '40px' }}>
+        <h2 className="page-title"><Ticket style={{ marginRight: '12px' }} size={32} className="text-primary" /> Create Incident Ticket</h2>
+        <p className="page-subtitle" style={{ marginBottom: '40px' }}>
+          Report a broken resource, software bug, or facility issue. Provide as much detail as possible to help us resolve it quickly.
+        </p>
         
-        <div>
-          <h3 className="form-section">Basic Information</h3>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Title</label>
-            <input 
-              type="text" className="input-field" value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              placeholder="E.g., Broken Projector in Lab 3" required 
-            />
-          </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          
+          {/* Section: Basic Information */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Description</label>
-            <textarea 
-              className="input-field" value={description} 
-              onChange={(e) => setDescription(e.target.value)} 
-              rows="4" placeholder="Describe the issue in detail..." required 
-            />
-          </div>
-        </div>
-
-        <div>
-          <h3 className="form-section">Categorization</h3>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>Category</label>
-              <CustomSelect 
-                value={category} 
-                options={['Hardware', 'Software', 'Network', 'Other']}
-                onChange={setCategory} 
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>Priority</label>
-              <CustomSelect 
-                value={priority} 
-                options={['Low', 'Medium', 'High']}
-                onChange={setPriority} 
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="form-section">Location & Contact</h3>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>Location (Room/Building)</label>
-              <input 
-                type="text" className="input-field" value={location} 
-                onChange={(e) => setLocation(e.target.value)} 
-                placeholder="E.g., Engineering Block, Room 102" required 
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>Contact Info (Email/Phone)</label>
-              <input 
-                type="text" className="input-field" value={preferredContact} 
-                onChange={(e) => setPreferredContact(e.target.value)} 
-                placeholder="E.g., student@campus.edu" required 
-              />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Attach Evidence (Max 3 Images)</label>
-            <input 
-              type="file" 
-              className="input-field" 
-              onChange={handleImageSelection} 
-              accept="image/*" 
-              multiple // Allows selecting multiple files at once in the OS file picker
-              disabled={images.length >= 3} // Disable input if they hit the limit
-            />
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text-main)' }}>Basic Information</h3>
             
-            {/* Visual list of selected images */}
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={16} /> Title <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <input 
+                type="text" 
+                className={`form-control ${errors.title ? 'is-invalid' : ''}`}
+                style={{ borderColor: errors.title ? 'var(--danger)' : 'var(--border)' }}
+                value={title} 
+                onChange={(e) => { setTitle(e.target.value); setErrors({...errors, title: null}); }} 
+                placeholder="E.g., Broken Projector in Lab 3" 
+              />
+              {errors.title && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '6px' }}>{errors.title}</div>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlignLeft size={16} /> Description <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <textarea 
+                className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                style={{ borderColor: errors.description ? 'var(--danger)' : 'var(--border)', resize: 'vertical' }}
+                value={description} 
+                onChange={(e) => { setDescription(e.target.value); setErrors({...errors, description: null}); }} 
+                rows="5" 
+                placeholder="Describe the issue in detail. What happened? When did you notice it?" 
+              />
+              {errors.description && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '6px' }}>{errors.description}</div>}
+            </div>
+          </div>
+
+          {/* Section: Categorization */}
+          <div className="form-row" style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: '1 1 300px' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers size={16} /> Category
+              </label>
+              <select 
+                className="form-control" 
+                value={category} 
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="Hardware">Hardware</option>
+                <option value="Software">Software</option>
+                <option value="Network">Network</option>
+                <option value="Facility">Facility</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div className="form-group" style={{ flex: '1 1 300px' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertCircle size={16} /> Priority
+              </label>
+              <select 
+                className="form-control" 
+                value={priority} 
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="Low">Low - Not urgent</option>
+                <option value="Medium">Medium - Needs attention</option>
+                <option value="High">High - Critical impact</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section: Location & Contact */}
+          <div className="form-row" style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: '1 1 300px' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={16} /> Location <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <input 
+                type="text" 
+                className={`form-control ${errors.location ? 'is-invalid' : ''}`}
+                style={{ borderColor: errors.location ? 'var(--danger)' : 'var(--border)' }}
+                value={location} 
+                onChange={(e) => { setLocation(e.target.value); setErrors({...errors, location: null}); }} 
+                placeholder="E.g., Engineering Block, Room 102" 
+              />
+              {errors.location && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '6px' }}>{errors.location}</div>}
+            </div>
+            
+            <div className="form-group" style={{ flex: '1 1 300px' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Phone size={16} /> Contact Info <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <input 
+                type="text" 
+                className={`form-control ${errors.preferredContact ? 'is-invalid' : ''}`}
+                style={{ borderColor: errors.preferredContact ? 'var(--danger)' : 'var(--border)' }}
+                value={preferredContact} 
+                onChange={(e) => { setPreferredContact(e.target.value); setErrors({...errors, preferredContact: null}); }} 
+                placeholder="E.g., student@campus.edu or Phone #" 
+              />
+              {errors.preferredContact && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '6px' }}>{errors.preferredContact}</div>}
+            </div>
+          </div>
+
+          {/* Section: Upload */}
+          <div>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text-main)' }}>Evidence</h3>
+            
+            <div 
+              onClick={() => !loading && images.length < 3 && fileInputRef.current?.click()}
+              style={{ 
+                border: '2px dashed var(--border)', 
+                borderRadius: 'var(--radius-lg)', 
+                padding: '40px 20px', 
+                textAlign: 'center', 
+                cursor: images.length >= 3 ? 'not-allowed' : 'pointer',
+                backgroundColor: 'var(--surface-hover)',
+                transition: 'all 0.2s',
+                opacity: images.length >= 3 ? 0.6 : 1
+              }}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleImageSelection({ target: { files: e.dataTransfer.files }});
+                }
+              }}
+            >
+              <UploadCloud size={48} color="var(--primary)" style={{ marginBottom: '16px' }} />
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
+                {images.length >= 3 ? 'Maximum images reached' : 'Click or drag images to upload'}
+              </h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                Upload up to 3 images showing the issue (Max 10MB each)
+              </p>
+              
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleImageSelection} 
+                accept="image/*" 
+                multiple
+                disabled={images.length >= 3}
+              />
+            </div>
+            
+            {/* Visual list of selected images with previews */}
             {images.length > 0 && (
-              <ul style={{ listStyle: 'none', padding: '12px 0 0 0', margin: 0 }}>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '24px' }}>
                 {images.map((file, index) => (
-                  <li key={index} style={{ 
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: 'rgba(255,255,255,0.05)', padding: '8px 12px', 
-                    borderRadius: 'var(--radius-sm)', marginBottom: '8px', fontSize: '0.9rem'
+                  <div key={index} style={{ 
+                    position: 'relative', 
+                    width: '120px', 
+                    height: '120px', 
+                    borderRadius: 'var(--radius-md)', 
+                    overflow: 'hidden',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface-hover)'
                   }}>
-                    <span>📎 {file.name}</span>
+                    {file.preview ? (
+                      <img src={file.preview} alt={`preview ${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        <ImageIcon size={32} color="var(--text-muted)" />
+                      </div>
+                    )}
                     <button 
                       type="button" 
-                      onClick={() => removeImage(index)}
-                      style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', fontWeight: 'bold' }}
+                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                      style={{ 
+                        position: 'absolute', 
+                        top: '6px', 
+                        right: '6px', 
+                        background: 'rgba(239, 68, 68, 0.9)', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '50%', 
+                        width: '24px', 
+                        height: '24px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        cursor: 'pointer' 
+                      }}
                     >
-                      ✕ Remove
+                      <X size={14} />
                     </button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
-            
-            <span className="helper-text" style={{ marginTop: '8px' }}>
-              {images.length}/3 images selected. Max file size: 10MB.
-            </span>
           </div>
-        </div>
 
-        <button type="submit" className="btn-primary" style={{ padding: '14px', fontSize: '1rem', marginTop: '16px' }}>
-          Submit Ticket
-        </button>
-      </form>
-
-      {statusMessage && (
-        <div 
-          className={statusMessage.includes('successfully') ? 'animate-fade-in feedback-glass' : 'animate-shake feedback-glass'} 
-          style={{ 
-            marginTop: '24px', padding: '16px', borderRadius: 'var(--radius-sm)', textAlign: 'center', fontWeight: '500',
-            backgroundColor: statusMessage.includes('successfully') ? 'var(--success-bg)' : 'var(--error-bg)',
-            color: statusMessage.includes('successfully') ? 'var(--success-text)' : 'var(--error-text)',
-            border: `1px solid ${statusMessage.includes('successfully') ? 'var(--success-border)' : 'var(--error-border)'}`
-          }}
-        >
-          {statusMessage}
-        </div>
-      )}
+          <div style={{ marginTop: '16px' }}>
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              disabled={loading}
+              style={{ width: '100%', padding: '18px', fontSize: '1.1rem' }}
+            >
+              {loading ? 'Submitting Ticket...' : 'Submit Incident Ticket'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

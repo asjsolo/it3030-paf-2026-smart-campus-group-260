@@ -5,11 +5,11 @@ import {
   CalendarCheck, 
   TicketCheck, 
   CalendarPlus, 
-  CalendarDays, 
+  ClipboardList, 
   FileEdit, 
   Files, 
   ShieldCheck, 
-  GraduationCap, 
+  UserRound, 
   LogOut 
 } from 'lucide-react';
 
@@ -26,8 +26,6 @@ export default function Layout({ children, role, onLogout }) {
     navigate('/login');
   };
 
-  // If there is no role (user is logged out) or we are on the login page, 
-  // don't render the sidebar and topbar at all. Just render the children.
   if (!role || location.pathname === '/login') {
     return (
       <div style={{ minHeight: '100vh', width: '100%', background: 'var(--surface)' }}>
@@ -70,9 +68,9 @@ export default function Layout({ children, role, onLogout }) {
                 <CalendarPlus size={20} /> Request Booking
               </Link>
               <Link to="/bookings/my" className={getLinkClass('/bookings/my')}>
-                <CalendarDays size={20} /> My Bookings
+                <ClipboardList size={20} /> My Bookings
               </Link>
-              <div style={{ margin: '16px 0', borderBottom: '1px solid var(--border)' }}></div>
+              <div style={{ margin: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
               <Link to="/create-ticket" className={getLinkClass('/create-ticket')}>
                 <FileEdit size={20} /> Create Ticket
               </Link>
@@ -88,10 +86,10 @@ export default function Layout({ children, role, onLogout }) {
         <header className="topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div className="role-badge">
-              {role === 'ADMIN' ? <ShieldCheck size={18} /> : <GraduationCap size={18} />}
+              {role === 'ADMIN' ? <ShieldCheck size={18} /> : <UserRound size={18} />}
               {role || 'Guest'}
             </div>
-            <button className="btn btn-outline" onClick={handleLogout} style={{ padding: '8px 16px', gap: '8px' }}>
+            <button className="btn btn-outline" onClick={handleLogout} style={{ padding: '10px 20px', gap: '8px' }}>
               <LogOut size={18} /> Sign Out
             </button>
           </div>

@@ -17,8 +17,28 @@ public class BookingService {
     private BookingRepository bookingRepository;
 
     public Booking createBooking(Booking booking) {
+        if (booking.getResourceType() == null || booking.getResourceType().trim().isEmpty()) {
+            throw new IllegalArgumentException("Resource type is required");
+        }
+
+        if (booking.getDate() != null && booking.getDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Booking date cannot be in the past");
+        }
+
+        if (booking.getStartTime() == null || booking.getEndTime() == null) {
+            throw new IllegalArgumentException("Start time and end time are required");
+        }
+
         if (booking.getStartTime().isAfter(booking.getEndTime()) || booking.getStartTime().equals(booking.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new IllegalArgumentException("End time must be after start time");
+        }
+
+        if (booking.getPurpose() == null || booking.getPurpose().trim().isEmpty()) {
+            throw new IllegalArgumentException("Purpose is required");
+        }
+
+        if (booking.getExpectedAttendees() == null || booking.getExpectedAttendees() <= 0) {
+            throw new IllegalArgumentException("Expected attendees must be greater than 0");
         }
 
         // Check for conflicts
@@ -31,7 +51,7 @@ public class BookingService {
         );
 
         if (!conflicts.isEmpty()) {
-            throw new IllegalStateException("Resource is already booked for the requested time slot.");
+            throw new IllegalStateException("This time slot is already booked for this resource.");
         }
 
         booking.setStatus(BookingStatus.PENDING);
@@ -115,5 +135,50 @@ public class BookingService {
 
     public void deleteBooking(Long id) {
         bookingRepository.deleteById(id);
+    }
+
+    public java.util.Map<String, Object> getAnalytics() {
+        List<Booking> all = bookingRepository.findAll();
+        long total = all.size();
+        long pending = all.stream().filter(b -> b.getStatus() == BookingStatus.PENDING).count();
+        long approved = all.stream().filter(b -> b.getStatus() == BookingStatus.APPROVED).count();
+        long rejected = all.stream().filter(b -> b.getStatus() == BookingStatus.REJECTED).count();
+        long cancelled = all.stream().filter(b -> b.getStatus() == BookingStatus.CANCELLED).count();
+        long todayBookings = all.stream().filter(b -> b.getDate() != null && b.getDate().equals(LocalDate.now())).count();
+
+        String topResource = "N/A";
+        if (!all.isEmpty()) {
+            topResource = all.stream()
+                .filter(b -> b.getResourceId() != null)
+                .collect(java.util.stream.Collectors.groupingBy(Booking::getResourceId, java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElse("N/A");
+        }
+
+        String peakTime = "N/A";
+        if (!all.isEmpty()) {
+            peakTime = all.stream()
+                .filter(b -> b.getStartTime() != null && b.getEndTime() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        b -> b.getStartTime().toString() + " - " + b.getEndTime().toString(),
+                        java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElse("N/A");
+        }
+
+        return java.util.Map.of(
+            "total", total,
+            "pending", pending,
+            "approved", approved,
+            "rejected", rejected,
+            "cancelled", cancelled,
+            "topResource", topResource,
+            "peakTime", peakTime,
+            "todayBookings", todayBookings
+        );
     }
 }

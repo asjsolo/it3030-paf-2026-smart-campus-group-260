@@ -104,4 +104,9 @@ public class BookingController {
              return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "An error occurred while deleting the booking."));
         }
     }
+
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Object>> getAnalytics() {
+        return ResponseEntity.ok(bookingService.getAnalytics());
+    }
 }

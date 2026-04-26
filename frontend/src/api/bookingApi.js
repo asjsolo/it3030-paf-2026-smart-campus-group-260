@@ -36,3 +36,8 @@ export const deleteBooking = async (id) => {
   const response = await axios.delete(`${API_BASE_URL}/${id}`);
   return response.data;
 };
+
+export const getBookingAnalytics = async () => {
+  const response = await axios.get(`${API_BASE_URL}/analytics`);
+  return response.data;
+};

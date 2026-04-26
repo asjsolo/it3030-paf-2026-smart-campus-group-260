@@ -17,6 +17,9 @@ public class Booking {
     private String resourceId;
 
     @Column(nullable = false)
+    private String resourceType; // e.g. Room, Lab, Equipment
+
+    @Column(nullable = false)
     private String requestedBy; // userId or email
 
     @Column(nullable = false)
@@ -58,6 +61,8 @@ public class Booking {
     public void setId(Long id) { this.id = id; }
     public String getResourceId() { return resourceId; }
     public void setResourceId(String resourceId) { this.resourceId = resourceId; }
+    public String getResourceType() { return resourceType; }
+    public void setResourceType(String resourceType) { this.resourceType = resourceType; }
     public String getRequestedBy() { return requestedBy; }
     public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }
     public LocalDate getDate() { return date; }
