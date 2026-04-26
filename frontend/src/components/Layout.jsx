@@ -16,12 +16,13 @@ export default function Layout({ children }) {
       gap: '12px',
       padding: '12px 16px',
       textDecoration: 'none',
-      color: isActive ? 'var(--primary-accent)' : 'var(--text-muted)',
-      backgroundColor: isActive ? 'rgba(139, 92, 246, 0.1)' : 'transparent',
-      borderRadius: 'var(--radius-sm)',
+      color: isActive ? '#64b5f6' : '#bbb',
+      backgroundColor: isActive ? 'rgba(100, 181, 246, 0.15)' : 'transparent',
+      borderRadius: '8px',
       fontWeight: isActive ? '600' : '500',
       transition: 'all 0.2s ease',
       marginBottom: '8px',
+      fontSize: '0.95rem',
     }
   }
 
@@ -35,19 +36,19 @@ export default function Layout({ children }) {
 
       <aside style={{
         width: '260px',
-        backgroundColor: 'var(--surface-color)',
-        borderRight: '1px solid var(--glass-border)',
+        backgroundColor: '#1a1a2e',
+        borderRight: '1px solid #333',
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
         <div style={{ padding: '0 16px 32px 16px' }}>
-          <h2 style={{ color: 'var(--primary-accent)', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ color: '#fff', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '1.5rem' }}>🎓</span> SmartCampus
           </h2>
           {user && (
-            <div style={{ marginTop: 12, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              {user.name} · <span style={{ color: 'var(--primary-accent)' }}>{role}</span>
+            <div style={{ marginTop: 12, fontSize: '0.85rem', color: '#ccc' }}>
+              {user.name} · <span style={{ color: '#64b5f6' }}>{role}</span>
             </div>
           )}
         </div>
@@ -80,7 +81,7 @@ export default function Layout({ children }) {
               border: 'none',
               cursor: 'pointer',
               textAlign: 'left',
-              color: '#EF4444',
+              color: '#ff6b6b',
               fontFamily: 'inherit',
               fontSize: '1rem',
             }}
@@ -90,7 +91,7 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: '40px', overflowY: 'auto', backgroundColor: '#f0f2f5' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
           <NotificationPanel />
         </div>
