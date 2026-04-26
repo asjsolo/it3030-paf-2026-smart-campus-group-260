@@ -44,6 +44,10 @@ public class IncidentTicket {
     @Column(columnDefinition = "TEXT")
     private String resolutionNotes;
 
+    // Email of the student who created the ticket — used to notify them on
+    // status updates and new comments. Set automatically from JWT principal.
+    private String createdByEmail;
+
     // --- The Relationship to Comments ---
     // One ticket can have Many comments. 
     @OneToMany(mappedBy = "incidentTicket", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -99,5 +103,6 @@ public class IncidentTicket {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    
+    public String getCreatedByEmail() { return createdByEmail; }
+    public void setCreatedByEmail(String createdByEmail) { this.createdByEmail = createdByEmail; }
 }

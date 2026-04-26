@@ -65,4 +65,10 @@ export const editComment = (id, content) =>
   api.put(`/comments/${id}`, { content })
 export const deleteComment = (id) => api.delete(`/comments/${id}`)
 
+// Notifications
+export const getNotifications = () => api.get('/notifications')
+export const getUnreadNotificationCount = () => api.get('/notifications/unread-count')
+export const markNotificationRead = (id) => api.patch(`/notifications/${id}/read`)
+export const markAllNotificationsRead = () => api.patch('/notifications/read-all')
+
 export default api

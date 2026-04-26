@@ -2,6 +2,7 @@ package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.entity.IncidentTicket;
 import com.smartcampus.backend.repository.IncidentTicketRepository;
+import com.smartcampus.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,70 +11,77 @@ import java.util.List;
 public class IncidentTicketService {
 
     private final IncidentTicketRepository repository;
+    private final NotificationService notificationService;
 
-    // Constructor Injection: This tells Spring Boot to automatically provide the Repository we just made
-    public IncidentTicketService(IncidentTicketRepository repository) {
+    public IncidentTicketService(IncidentTicketRepository repository,
+                                 NotificationService notificationService) {
         this.repository = repository;
+        this.notificationService = notificationService;
     }
-
-    // --- Business Logic Methods ---
 
     // 1. Create a brand new ticket
     public IncidentTicket createTicket(IncidentTicket ticket) {
-        // Enforce the rule: All new tickets must start as OPEN
         ticket.setStatus("OPEN");
         return repository.save(ticket);
     }
 
-    // 2. Retrieve all tickets (for an admin or technician dashboard)
+    // 2. Retrieve all tickets
     public List<IncidentTicket> getAllTickets() {
         return repository.findAll();
     }
 
     // 3. Find a specific ticket by its ID
     public IncidentTicket getTicketById(Long id) {
-        // If the ticket doesn't exist, throw an error
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
     }
 
-    // 4. Update a ticket's status and add resolution notes (for technicians)
+    // 4. Update status + resolution notes — notifies the ticket creator if status actually changed
     public IncidentTicket updateTicketStatusAndNotes(Long id, String newStatus, String notes) {
         IncidentTicket existingTicket = getTicketById(id);
-        
+        String previousStatus = existingTicket.getStatus();
+
         existingTicket.setStatus(newStatus);
-        
-        // Only update notes if they are provided
         if (notes != null && !notes.isEmpty()) {
             existingTicket.setResolutionNotes(notes);
         }
-        
-        return repository.save(existingTicket);
+        IncidentTicket saved = repository.save(existingTicket);
+
+        if (newStatus != null && !newStatus.equals(previousStatus)) {
+            notificationService.notifyTicketStatusChanged(
+                    saved.getCreatedByEmail(), saved.getId(), saved.getTitle(), newStatus);
+        }
+        return saved;
     }
 
     // 5. Assign a Technician
     public IncidentTicket assignTechnician(Long id, String technician) {
-        // Reusing your getTicketById method!
         IncidentTicket ticket = getTicketById(id);
-        
+        String previousStatus = ticket.getStatus();
+
         ticket.setAssignedTechnician(technician);
-        
-        // Automatically move status to IN_PROGRESS if it was OPEN
-        if ("OPEN".equals(ticket.getStatus())) {
+        if ("OPEN".equals(previousStatus)) {
             ticket.setStatus("IN_PROGRESS");
         }
-        
-        return repository.save(ticket);
+        IncidentTicket saved = repository.save(ticket);
+
+        if (!saved.getStatus().equals(previousStatus)) {
+            notificationService.notifyTicketStatusChanged(
+                    saved.getCreatedByEmail(), saved.getId(), saved.getTitle(), saved.getStatus());
+        }
+        return saved;
     }
 
     // 6. Reject a Ticket
     public IncidentTicket rejectTicket(Long id, String reason) {
-        // Reusing your getTicketById method!
         IncidentTicket ticket = getTicketById(id);
-        
+
         ticket.setStatus("REJECTED");
         ticket.setRejectionReason(reason);
-        
-        return repository.save(ticket);
+        IncidentTicket saved = repository.save(ticket);
+
+        notificationService.notifyTicketStatusChanged(
+                saved.getCreatedByEmail(), saved.getId(), saved.getTitle(), "REJECTED");
+        return saved;
     }
 }

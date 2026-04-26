@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import NotificationPanel from './NotificationPanel'
 
 export default function Layout({ children }) {
   const location = useLocation()
@@ -90,6 +91,9 @@ export default function Layout({ children }) {
       </aside>
 
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <NotificationPanel />
+        </div>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           {children}
         </div>

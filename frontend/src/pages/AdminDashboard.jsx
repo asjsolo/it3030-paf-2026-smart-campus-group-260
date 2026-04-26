@@ -8,6 +8,7 @@ import {
   updateUser,
   toggleUserActive,
 } from '../services/api'
+import NotificationPanel from '../components/NotificationPanel'
 
 const ROLE_OPTIONS = ['USER', 'TECHNICIAN', 'ADMIN']
 const EDITABLE_ROLES = ['USER', 'TECHNICIAN']
@@ -142,6 +143,7 @@ export default function AdminDashboard() {
           <img src={user?.picture} alt="avatar" style={styles.avatar} />
           <span style={styles.navName}>{user?.name}</span>
           <span style={styles.adminBadge}>ADMIN</span>
+          <NotificationPanel />
           <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
         </div>
       </nav>
