@@ -14,13 +14,13 @@ hs_err_pid*
 replay_pid*
 
 # Ignore Spring Boot compiled output
-backend/target/
+target/
+build/
 .mvn/wrapper/maven-wrapper.jar
 
 # --- React / Node.js (CRITICAL FOR ASSIGNMENT) ---
-frontend/node_modules/
-frontend/build/
-frontend/dist/
+node_modules/
+dist/
 .env
 
 # --- OS & IDE Files ---
