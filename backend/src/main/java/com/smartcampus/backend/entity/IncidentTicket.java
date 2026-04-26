@@ -9,9 +9,13 @@ public class IncidentTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    // ADD THIS LINE:
+    private String title;
 
     // The type of issue (e.g., "Hardware", "Network", "Plumbing")
     private String category;
+
+  
 
     // Detailed explanation of the issue
     @Column(columnDefinition = "TEXT")
@@ -91,4 +95,9 @@ public class IncidentTicket {
 
     public java.util.List<Attachment> getAttachments() { return attachments; }
     public void setAttachments(java.util.List<Attachment> attachments) { this.attachments = attachments; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    
 }

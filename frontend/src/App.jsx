@@ -4,6 +4,15 @@ import AdminResourceManagement from './pages/resources/AdminResourceManagement';
 import { ResourceProvider } from './pages/resources/ResourceContext';
 
 function App() {
+  // Read from local storage on startup
+  const [role, setRole] = useState(localStorage.getItem('userRole'));
+
+  // Quick logout function for your navbar (optional, but helpful for testing)
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    setRole(null);
+  };
+
   return (
     <Router>
       <div>
