@@ -3,11 +3,13 @@ package com.smartcampus.backend.service;
 import com.smartcampus.backend.entity.IncidentTicket;
 import com.smartcampus.backend.repository.IncidentTicketRepository;
 import com.smartcampus.notification.service.NotificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class IncidentTicketService {
 
     private final IncidentTicketRepository repository;
@@ -22,7 +24,14 @@ public class IncidentTicketService {
     // 1. Create a brand new ticket
     public IncidentTicket createTicket(IncidentTicket ticket) {
         ticket.setStatus("OPEN");
-        return repository.save(ticket);
+        IncidentTicket saved = repository.save(ticket);
+        log.info("Ticket {} created by {}", saved.getId(), saved.getCreatedByEmail());
+        return saved;
+    }
+
+    // 2. Retrieve all tickets for a specific user by email
+    public List<IncidentTicket> getUserTickets(String userEmail) {
+        return repository.findByCreatedByEmail(userEmail);
     }
 
     // 2. Retrieve all tickets
@@ -47,7 +56,11 @@ public class IncidentTicketService {
         }
         IncidentTicket saved = repository.save(existingTicket);
 
+        log.info("Ticket {} status updated from {} to {}. CreatedByEmail: {}", 
+                id, previousStatus, newStatus, saved.getCreatedByEmail());
+
         if (newStatus != null && !newStatus.equals(previousStatus)) {
+            log.info("Sending notification to {} for ticket {}", saved.getCreatedByEmail(), id);
             notificationService.notifyTicketStatusChanged(
                     saved.getCreatedByEmail(), saved.getId(), saved.getTitle(), newStatus);
         }

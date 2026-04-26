@@ -3,6 +3,7 @@ package com.smartcampus.notification.service;
 import com.smartcampus.notification.entity.Notification;
 import com.smartcampus.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     private final NotificationRepository repository;
@@ -21,6 +23,7 @@ public class NotificationService {
         if (userEmail == null || userEmail.isBlank()) {
             // No recipient — silently drop. Avoids breaking the calling flow
             // for old tickets that have no createdByEmail.
+            log.warn("Notification skipped: userEmail is null or blank. Type: {}, Message: {}", type, message);
             return null;
         }
         Notification n = Notification.builder()
@@ -31,7 +34,9 @@ public class NotificationService {
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .build();
-        return repository.save(n);
+        Notification saved = repository.save(n);
+        log.info("Notification created for {}: {} - {}", userEmail, type, message);
+        return saved;
     }
 
     // --- Domain helpers (called by ticket / booking services) ---

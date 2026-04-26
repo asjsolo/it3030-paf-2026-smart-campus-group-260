@@ -2,9 +2,11 @@ package com.smartcampus.backend.controller;
 
 import com.smartcampus.backend.entity.IncidentTicket;
 import com.smartcampus.backend.service.IncidentTicketService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tickets")
+@Slf4j
 public class IncidentTicketController {
 
     private final IncidentTicketService service;
@@ -32,6 +35,8 @@ public class IncidentTicketController {
             @RequestParam(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal String email) {
 
+        log.info("Creating ticket for user: {}", email);
+
         IncidentTicket ticket = new IncidentTicket();
         ticket.setTitle(title);
         ticket.setDescription(description);
@@ -46,8 +51,16 @@ public class IncidentTicketController {
     }
 
     @GetMapping
-    public ResponseEntity<List<IncidentTicket>> getAllTickets() {
-        return new ResponseEntity<>(service.getAllTickets(), HttpStatus.OK);
+    public ResponseEntity<List<IncidentTicket>> getAllTickets(@AuthenticationPrincipal String email) {
+        boolean isTechnician = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"));
+        
+        List<IncidentTicket> tickets = isTechnician 
+                ? service.getAllTickets() 
+                : service.getUserTickets(email);
+        
+        return new ResponseEntity<>(tickets, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
