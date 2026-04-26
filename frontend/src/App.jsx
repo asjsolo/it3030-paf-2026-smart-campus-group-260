@@ -10,6 +10,7 @@ import BookingRequestForm from './pages/BookingRequestForm';
 import MyBookings from './pages/MyBookings';
 import AdminBookings from './pages/AdminBookings';
 import AdminDashboard from './pages/AdminDashboard';
+import VerifyBooking from './pages/VerifyBooking';
 
 function App() {
   // Read from local storage on startup
@@ -29,6 +30,8 @@ function App() {
           {!role ? (
             <>
               <Route path="/login" element={<Login setRole={setRole} />} />
+              {/* Public route: QR verify page works without login */}
+              <Route path="/verify-booking" element={<VerifyBooking />} />
               <Route path="*" element={<Navigate to="/login" />} />
             </>
           ) : (
@@ -44,6 +47,8 @@ function App() {
               <Route path="/bookings/request" element={<BookingRequestForm />} />
               <Route path="/bookings/my" element={<MyBookings />} />
               <Route path="/admin/bookings" element={<AdminBookings />} />
+              {/* QR Verify - also accessible when logged in */}
+              <Route path="/verify-booking" element={<VerifyBooking />} />
 
               {/* Booking Module Dashboards */}
               <Route path="/student/dashboard" element={<StudentDashboard />} />

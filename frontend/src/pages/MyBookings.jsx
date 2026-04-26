@@ -125,14 +125,18 @@ export default function MyBookings() {
                           <div style={{ background: 'white', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
                             <QRCodeCanvas 
                               id={`qr-canvas-${booking.id}`}
-                              value={JSON.stringify({
-                                bookingId: booking.id,
-                                resourceType: booking.resourceType || 'Resource',
-                                resourceName: booking.resourceName || booking.resourceId,
-                                date: booking.date,
-                                startTime: booking.startTime,
-                                endTime: booking.endTime
-                              })}
+                              value={(() => {
+                                // Encode booking data as a URL so scanning opens the verification receipt
+                                const payload = encodeURIComponent(JSON.stringify({
+                                  bookingId: booking.id,
+                                  resourceType: booking.resourceType || 'Resource',
+                                  resourceName: booking.resourceId,
+                                  date: booking.date,
+                                  startTime: booking.startTime,
+                                  endTime: booking.endTime
+                                }));
+                                return `${window.location.origin}/verify-booking?data=${payload}`;
+                              })()}
                               size={120}
                               level="H"
                               includeMargin={true}
