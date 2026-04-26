@@ -1,47 +1,27 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getTickets } from '../services/api'
 
 export default function StudentDashboard() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const userRole = localStorage.getItem('userRole');
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
-    fetchMyTickets();
-  }, []);
+    // NOTE: backend currently returns all tickets — once a userId/email field is added
+    // to IncidentTicket, this should filter to the logged-in student's tickets only.
+    getTickets()
+      .then((res) => setTickets(res.data))
+      .catch((err) => {
+        console.error('Error fetching tickets:', err)
+        setError('Failed to load your tickets.')
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
-  const fetchMyTickets = async () => {
-    try {
-      // NOTE: For a real app, this endpoint would be filtered by the logged-in student's ID (e.g., /api/tickets/student/1)
-      // Since we are mocking auth with just roles right now, we will fetch all tickets.
-      const response = await axios.get('http://localhost:8082/api/tickets');
-      setTickets(response.data);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching tickets:', err);
-      setError('Failed to load your tickets.');
-      setLoading(false);
-    }
-  };
-
-  // Block Technicians from using the Student Dashboard
-  if (userRole === 'TECHNICIAN') {
-    return (
-      <div className="card" style={{ textAlign: 'center', marginTop: '50px' }}>
-        <h2 style={{ color: '#EF4444' }}>Technician Route</h2>
-        <p style={{ color: 'var(--text-muted)' }}>Technicians should use the Master Dashboard.</p>
-        <button className="btn-primary" onClick={() => navigate('/dashboard')} style={{ width: 'auto', marginTop: '16px', padding: '10px 20px' }}>
-          Go to Master Dashboard
-        </button>
-      </div>
-    );
-  }
-
-  if (loading) return <p style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading your tickets...</p>;
-  if (error) return <p style={{ color: 'red', textAlign: 'center', marginTop: '50px' }}>{error}</p>;
+  if (loading) return <p style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading your tickets...</p>
+  if (error) return <p style={{ color: 'red', textAlign: 'center', marginTop: '50px' }}>{error}</p>
 
   return (
     <div className="card">
@@ -64,10 +44,10 @@ export default function StudentDashboard() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--bg-color)' }}>
-                <th style={{ padding: '14px', borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>ID</th>
-                <th style={{ padding: '14px', borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>Title</th>
-                <th style={{ padding: '14px', borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>Status</th>
-                <th style={{ padding: '14px', borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>Updates</th>
+                <th style={th}>ID</th>
+                <th style={th}>Title</th>
+                <th style={th}>Status</th>
+                <th style={th}>Updates</th>
               </tr>
             </thead>
             <tbody>
@@ -76,20 +56,20 @@ export default function StudentDashboard() {
                   <td style={{ padding: '14px', color: 'var(--text-muted)' }}>#{ticket.id}</td>
                   <td style={{ padding: '14px', fontWeight: '600', color: 'var(--text-main)' }}>{ticket.title}</td>
                   <td style={{ padding: '14px' }}>
-                     <span style={{ 
+                    <span style={{
                       color: ticket.status === 'RESOLVED' ? '#10B981' : ticket.status === 'IN_PROGRESS' ? '#3B82F6' : '#F59E0B',
                       backgroundColor: ticket.status === 'RESOLVED' ? '#ECFDF5' : ticket.status === 'IN_PROGRESS' ? '#EFF6FF' : '#FFFBEB',
                       padding: '4px 10px',
                       borderRadius: 'var(--radius-sm)',
                       fontWeight: '600',
-                      fontSize: '0.85rem'
+                      fontSize: '0.85rem',
                     }}>
                       {ticket.status || 'OPEN'}
                     </span>
                   </td>
                   <td style={{ padding: '14px' }}>
-                    <button 
-                      className="btn-primary" 
+                    <button
+                      className="btn-primary"
                       onClick={() => navigate(`/ticket/${ticket.id}`)}
                       style={{ width: 'auto', padding: '6px 16px', fontSize: '0.85rem', margin: '0', background: 'transparent', border: '1px solid var(--primary-accent)', color: 'var(--primary-accent)' }}
                     >
@@ -103,5 +83,7 @@ export default function StudentDashboard() {
         </div>
       )}
     </div>
-  );
+  )
 }
+
+const th = { padding: '14px', borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }

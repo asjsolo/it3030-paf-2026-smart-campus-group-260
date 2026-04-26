@@ -9,8 +9,8 @@ import {
   toggleUserActive,
 } from '../services/api'
 
-const ROLE_OPTIONS = ['USER', 'STAFF', 'TECHNICIAN', 'ADMIN']
-const EDITABLE_ROLES = ['USER', 'STAFF', 'TECHNICIAN']
+const ROLE_OPTIONS = ['USER', 'TECHNICIAN', 'ADMIN']
+const EDITABLE_ROLES = ['USER', 'TECHNICIAN']
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'STAFF' })
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'TECHNICIAN' })
   const [creating, setCreating] = useState(false)
 
   // Modal state: { mode: 'view' | 'edit', data: user } or null
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       const res = await createUser(newUser)
       setUsers((prev) => [...prev, res.data])
       showToast(`${res.data.role} account created for ${res.data.email}`)
-      setNewUser({ name: '', email: '', password: '', role: 'STAFF' })
+      setNewUser({ name: '', email: '', password: '', role: 'TECHNICIAN' })
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create user. Email may already be in use.')
     } finally {
@@ -154,14 +154,13 @@ export default function AdminDashboard() {
         <div style={styles.statsRow}>
           <StatCard label="Total" value={users.length} icon="👥" />
           <StatCard label="Admins" value={users.filter((u) => u.role === 'ADMIN').length} icon="🛡️" />
-          <StatCard label="Staff" value={users.filter((u) => u.role === 'STAFF').length} icon="💼" />
           <StatCard label="Technicians" value={users.filter((u) => u.role === 'TECHNICIAN').length} icon="🔧" />
-          <StatCard label="Users" value={users.filter((u) => u.role === 'USER').length} icon="🎓" />
+          <StatCard label="Students" value={users.filter((u) => u.role === 'USER').length} icon="🎓" />
         </div>
 
-        {/* Create Staff / Technician form */}
+        {/* Create Technician account form */}
         <div style={styles.createCard}>
-          <h3 style={styles.tableTitle}>Create Staff or Technician Account</h3>
+          <h3 style={styles.tableTitle}>Create Technician or Student Account</h3>
           {error && !modal && <div style={styles.errorBox}>{error}</div>}
           <form onSubmit={handleCreateUser} style={styles.createForm}>
             <input style={styles.input} type="text" name="name" placeholder="Full name"
@@ -171,9 +170,8 @@ export default function AdminDashboard() {
             <input style={styles.input} type="password" name="password" placeholder="Password (min. 6)"
                    value={newUser.password} onChange={handleNewUserChange} />
             <select style={styles.input} name="role" value={newUser.role} onChange={handleNewUserChange}>
-              <option value="STAFF">Staff</option>
               <option value="TECHNICIAN">Technician</option>
-              <option value="USER">User</option>
+              <option value="USER">Student</option>
               <option value="ADMIN">Admin</option>
             </select>
             <button style={styles.createBtn} type="submit" disabled={creating}>
@@ -316,7 +314,6 @@ function Row({ label, value, children }) {
 function rolePillColor(role) {
   switch (role) {
     case 'ADMIN':      return { background: '#0f3460', color: '#fff' }
-    case 'STAFF':      return { background: '#fff3e0', color: '#e67e22' }
     case 'TECHNICIAN': return { background: '#e8f5e9', color: '#27ae60' }
     default:           return { background: '#e8f0fe', color: '#1a73e8' }
   }

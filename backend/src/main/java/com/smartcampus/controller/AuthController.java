@@ -52,7 +52,7 @@ public class AuthController {
     }
 
     /**
-     * Admin: create a user with any role (e.g. STAFF, TECHNICIAN).
+     * Admin: create a user with any role (e.g. USER, TECHNICIAN).
      */
     @PostMapping("/admin/users")
     @PreAuthorize("hasRole('ADMIN')")

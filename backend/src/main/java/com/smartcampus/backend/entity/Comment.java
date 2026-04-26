@@ -12,7 +12,7 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // The person who wrote the comment (e.g., "Student ID" or "Staff Name")
+    // The person who wrote the comment — formatted as "{role-emoji} {user.name}"
     private String author;
 
     // The actual text of the comment

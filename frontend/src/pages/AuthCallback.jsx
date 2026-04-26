@@ -20,7 +20,10 @@ export default function AuthCallback() {
 
     login(token)
       .then((user) => {
-        const destination = user?.role === 'ADMIN' ? '/admin' : '/dashboard'
+        const destination =
+          user?.role === 'ADMIN' ? '/admin'
+          : user?.role === 'TECHNICIAN' ? '/dashboard'
+          : '/my-tickets'
         navigate(destination, { replace: true })
       })
       .catch(() => navigate('/login', { replace: true }))

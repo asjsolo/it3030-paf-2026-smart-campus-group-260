@@ -13,7 +13,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard', { replace: true })
+      const dest =
+        user.role === 'ADMIN' ? '/admin'
+        : user.role === 'TECHNICIAN' ? '/dashboard'
+        : '/my-tickets'
+      navigate(dest, { replace: true })
     }
   }, [user, navigate])
 
