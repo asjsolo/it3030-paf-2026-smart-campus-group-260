@@ -2,10 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
+import AdminLayout from './components/AdminLayout'
 import LoginPage from './pages/LoginPage'
 import AuthCallback from './pages/AuthCallback'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminResourceManagement from './pages/resources/AdminResourceManagement'
+import CampusDashboard from './pages/resources/CampusDashboard'
 import Unauthorized from './pages/Unauthorized'
 import CreateTicket from './pages/CreateTicket'
 import TicketDashboard from './pages/TicketDashboard'
@@ -13,12 +15,14 @@ import TicketDetails from './pages/TicketDetails'
 import StudentDashboard from './pages/StudentDashboard'
 import { ResourceProvider } from './pages/resources/ResourceContext'
 
-// Wrap a page in the Module-C sidebar Layout
 function WithLayout({ children }) {
   return <Layout>{children}</Layout>
 }
 
-// Sends users to the right home based on role
+function WithAdminLayout({ children }) {
+  return <AdminLayout>{children}</AdminLayout>
+}
+
 function RoleHome() {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
@@ -57,7 +61,7 @@ export default function App() {
             }
           />
 
-          {/* File a new ticket — students only (technicians don't file tickets) */}
+          {/* File a new ticket — students only */}
           <Route
             path="/create-ticket"
             element={
@@ -77,23 +81,35 @@ export default function App() {
             }
           />
 
-          {/* Admin */}
+          {/* Admin — User Management */}
           <Route
             path="/admin"
             element={
               <ProtectedRoute requiredRole="ADMIN">
-                <AdminDashboard />
+                <WithAdminLayout><AdminDashboard /></WithAdminLayout>
               </ProtectedRoute>
             }
           />
 
-          {/* Admin Resource Management */}
+          {/* Admin — Resource Management */}
           <Route
             path="/admin/resources"
             element={
               <ProtectedRoute requiredRole="ADMIN">
                 <ResourceProvider>
-                  <AdminResourceManagement />
+                  <WithAdminLayout><AdminResourceManagement /></WithAdminLayout>
+                </ResourceProvider>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Campus Resource Dashboard — all authenticated users */}
+          <Route
+            path="/campus"
+            element={
+              <ProtectedRoute>
+                <ResourceProvider>
+                  <CampusDashboard />
                 </ResourceProvider>
               </ProtectedRoute>
             }

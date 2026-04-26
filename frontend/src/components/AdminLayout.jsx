@@ -2,11 +2,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import NotificationPanel from './NotificationPanel'
 
-export default function Layout({ children }) {
+export default function AdminLayout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const role = user?.role
 
   const getLinkStyle = (path) => {
     const isActive = location.pathname === path
@@ -33,7 +32,6 @@ export default function Layout({ children }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-
       <aside style={{
         width: '260px',
         backgroundColor: '#1a1a2e',
@@ -41,57 +39,65 @@ export default function Layout({ children }) {
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
       }}>
         <div style={{ padding: '0 16px 32px 16px' }}>
           <h2 style={{ color: '#fff', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '1.5rem' }}>🎓</span> SmartCampus
+            <span style={{ fontSize: '1.5rem' }}>🏛️</span> SmartCampus
           </h2>
           {user && (
             <div style={{ marginTop: 12, fontSize: '0.85rem', color: '#ccc' }}>
-              {user.name} · <span style={{ color: '#64b5f6' }}>{role}</span>
+              {user.name} · <span style={{ color: '#64b5f6' }}>ADMIN</span>
             </div>
           )}
         </div>
 
         <nav style={{ flex: 1 }}>
-          {role === 'TECHNICIAN' && (
-            <>
-              <Link to="/dashboard" style={getLinkStyle('/dashboard')}>
-                📊 Master Dashboard
-              </Link>
-              <Link to="/campus" style={getLinkStyle('/campus')}>
-                🏫 Campus Resources
-              </Link>
-            </>
-          )}
+          <div style={{
+            fontSize: '0.7rem', fontWeight: '700', color: '#888',
+            textTransform: 'uppercase', letterSpacing: '0.5px',
+            marginBottom: '12px', paddingLeft: '16px',
+          }}>
+            Management
+          </div>
+          <Link to="/admin" style={getLinkStyle('/admin')}>
+            👥 User Management
+          </Link>
+          <Link to="/admin/resources" style={getLinkStyle('/admin/resources')}>
+            📦 Resource Management
+          </Link>
 
-          {role === 'USER' && (
-            <>
-              <Link to="/my-tickets" style={getLinkStyle('/my-tickets')}>
-                🗂️ My Tickets
-              </Link>
-              <Link to="/create-ticket" style={getLinkStyle('/create-ticket')}>
-                📝 Create a Ticket
-              </Link>
-              <Link to="/campus" style={getLinkStyle('/campus')}>
-                🏫 Campus Resources
-              </Link>
-            </>
-          )}
+          <div style={{
+            fontSize: '0.7rem', fontWeight: '700', color: '#888',
+            textTransform: 'uppercase', letterSpacing: '0.5px',
+            margin: '20px 0 12px', paddingLeft: '16px',
+          }}>
+            Campus
+          </div>
+          <Link to="/campus" style={getLinkStyle('/campus')}>
+            🏫 Campus Dashboard
+          </Link>
         </nav>
 
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ marginTop: 'auto' }}>
           <button
             onClick={handleLogout}
             style={{
-              ...getLinkStyle('#logout'),
-              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              color: '#ff6b6b',
+              backgroundColor: 'transparent',
+              borderRadius: '8px',
+              fontWeight: '500',
               border: 'none',
               cursor: 'pointer',
-              textAlign: 'left',
-              color: '#ff6b6b',
               fontFamily: 'inherit',
-              fontSize: '1rem',
+              fontSize: '0.95rem',
+              width: '100%',
             }}
           >
             🚪 Logout
@@ -103,11 +109,8 @@ export default function Layout({ children }) {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
           <NotificationPanel />
         </div>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          {children}
-        </div>
+        {children}
       </main>
-
     </div>
   )
 }
