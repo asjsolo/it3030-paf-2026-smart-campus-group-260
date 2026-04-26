@@ -27,3 +27,8 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# --- Secrets — never commit ---
+application-local.properties
+application-local.yml
+.env.local
