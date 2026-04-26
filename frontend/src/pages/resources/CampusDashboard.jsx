@@ -6,57 +6,68 @@ import {
 } from 'lucide-react';
 import { useResources } from './ResourceContext';
 import ResourceDetailModal from './ResourceDetailModal';
-import './CampusDashboard.css';
 
+// ── Category display metadata (icon + colour) ──────────────────────────────
 const CATEGORY_META = [
-    { title: 'Academic Spaces',          icon: <Monitor   size={20} />, color: 'blue'   },
-    { title: 'Study & Library Spaces',   icon: <Library   size={20} />, color: 'green'  },
-    { title: 'Sports & Fitness',         icon: <Dumbbell  size={20} />, color: 'red'    },
-    { title: 'Student Medical Services', icon: <Stethoscope size={20} />, color: 'pink' },
-    { title: 'Events & Auditorium',      icon: <Mic2      size={20} />, color: 'orange' },
-    { title: 'Equipment',                icon: <Box       size={20} />, color: 'purple' },
+    { title: 'Academic Spaces',         icon: <Monitor  className="w-5 h-5" />, color: 'blue'   },
+    { title: 'Study & Library Spaces',  icon: <Library  className="w-5 h-5" />, color: 'green'  },
+    { title: 'Sports & Fitness',        icon: <Dumbbell className="w-5 h-5" />, color: 'red'    },
+    { title: 'Student Medical Services',icon: <Stethoscope className="w-5 h-5" />, color: 'pink'},
+    { title: 'Events & Auditorium',     icon: <Mic2     className="w-5 h-5" />, color: 'orange' },
+    { title: 'Equipment',               icon: <Box      className="w-5 h-5" />, color: 'purple' },
 ];
 
-const NAV_ITEMS = [
-    { icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-    { icon: <Box             size={18} />, label: 'Resources', active: true },
-    { icon: <Calendar        size={18} />, label: 'Bookings' },
-    { icon: <Wrench          size={18} />, label: 'Maintenance' },
-];
+// ── Sub-Components ─────────────────────────────────────────────────────────
 
-function StatusBadge({ status }) {
-    const key = status?.toLowerCase().replace(/\s+/g, '-');
-    return <span className={`cd-status-badge ${key}`}>{status}</span>;
-}
-
-function ResourceCard({ item, onViewDetails }) {
-    const crowdClass = item.crowd === 'High' ? 'high' : item.crowd ? 'medium' : null;
+const StatusBadge = ({ status }) => {
+    const colors = {
+        Active: 'bg-green-100 text-green-700',
+        'Out of Service': 'bg-red-100 text-red-700',
+        Maintenance: 'bg-yellow-100 text-yellow-700',
+        'Under Maintenance': 'bg-yellow-100 text-yellow-700',
+    };
     return (
-        <div className="cd-resource-card">
-            <div className="cd-resource-card-top">
-                <span className="cd-resource-name">{item.name}</span>
-                <StatusBadge status={item.status} />
-            </div>
-            <div className="cd-resource-meta">
-                <div className="cd-resource-meta-item"><Box size={14} /> Type: {item.type}</div>
-                <div className="cd-resource-meta-item"><MapPin size={14} /> {item.loc}</div>
-                {item.cap && <div className="cd-resource-meta-item"><Users size={14} /> Capacity: {item.cap}</div>}
-                {item.crowd && (
-                    <div>
-                        <div className="cd-crowd-label">Crowd Level:</div>
-                        <div className="cd-crowd-bar-wrap">
-                            <div className={`cd-crowd-bar ${crowdClass}`} />
-                        </div>
-                    </div>
-                )}
-            </div>
-            <div className="cd-card-actions">
-                <button className="cd-btn-view" onClick={() => onViewDetails(item.id)}>View Details</button>
-                <button className="cd-btn-book">Book Now</button>
-            </div>
-        </div>
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-600'}`}>
+            {status}
+        </span>
     );
-}
+};
+
+const ResourceCard = ({ item, onViewDetails }) => (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="flex justify-between items-start mb-3">
+            <h4 className="font-bold text-gray-800">{item.name}</h4>
+            <StatusBadge status={item.status} />
+        </div>
+        <div className="space-y-2 text-sm text-gray-500 mb-4">
+            <p className="flex items-center gap-2"><Box size={14} /> Type: {item.type}</p>
+            <p className="flex items-center gap-2"><MapPin size={14} /> Location: {item.loc}</p>
+            {item.cap && <p className="flex items-center gap-2"><Users size={14} /> Capacity: {item.cap}</p>}
+
+            {item.crowd && (
+                <div className="mt-2">
+                    <span className="text-xs uppercase font-bold">Crowd Level: </span>
+                    <div className="w-full bg-gray-100 h-2 rounded-full mt-1">
+                        <div className={`h-2 rounded-full ${item.crowd === 'High' ? 'bg-red-500 w-full' : 'bg-orange-400 w-1/2'}`} />
+                    </div>
+                </div>
+            )}
+        </div>
+        <div className="flex gap-2">
+            <button
+                onClick={() => onViewDetails(item.id)}
+                className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+            >
+                View Details
+            </button>
+            <button className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                Book Now
+            </button>
+        </div>
+    </div>
+);
+
+// ── Main Dashboard Component ───────────────────────────────────────────────
 
 export default function CampusDashboard() {
     const { resources } = useResources();
@@ -68,29 +79,40 @@ export default function CampusDashboard() {
     const [activeTags, setActiveTags]           = useState([]);
     const [selectedResource, setSelectedResource] = useState(null);
 
+    // Derive unique campuses for location filter
     const campuses = useMemo(
         () => ['All', ...new Set(resources.filter(r => !r.archived).map(r => r.campus))],
         [resources]
     );
 
+    // Build categorised data from context (mirrors original categoriesData shape)
     const categoriesData = useMemo(() =>
         CATEGORY_META.map(meta => ({
             ...meta,
             items: resources
                 .filter(r => !r.archived && r.category === meta.title)
-                .map(r => ({ id: r.id, name: r.name, type: r.type, loc: r.loc, cap: r.cap, status: r.status, tags: r.tags, crowd: r.crowd })),
+                .map(r => ({
+                    id: r.id, name: r.name, type: r.type, loc: r.loc,
+                    cap: r.cap, status: r.status, tags: r.tags,
+                    crowd: r.crowd, noise: r.noise,
+                })),
         })),
         [resources]
     );
 
-    const totalCount  = resources.filter(r => !r.archived).length;
-    const activeCount = resources.filter(r => !r.archived && r.status === 'Active').length;
-    const auditorium  = resources.find(r => r.id === 'AUD_MAIN') || {};
-    const medCenter   = resources.find(r => r.id === 'MED01')    || {};
+    // Live summary stats
+    const totalCount   = resources.filter(r => !r.archived).length;
+    const activeCount  = resources.filter(r => !r.archived && r.status === 'Active').length;
 
+    // Featured resources from context
+    const auditorium   = resources.find(r => r.id === 'AUD_MAIN') || {};
+    const medCenter    = resources.find(r => r.id === 'MED01')    || {};
+
+    // Toggle preference tag
     const toggleTag = (tag) =>
         setActiveTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
 
+    // Filter Logic (extends original with search + campus + tags)
     const filteredCategories = categoriesData.map(cat => ({
         ...cat,
         items: cat.items.filter(item =>
@@ -98,9 +120,9 @@ export default function CampusDashboard() {
             (item.cap ? item.cap >= minCapacity : true) &&
             (searchTerm === '' ||
                 item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.type?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-            (selectedCampus === 'All' || resources.find(r => r.id === item.id)?.campus === selectedCampus) &&
+                item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.type.toLowerCase().includes(searchTerm.toLowerCase())) &&
+            (selectedCampus === 'All' || (resources.find(r => r.id === item.id)?.campus === selectedCampus)) &&
             (activeTags.length === 0 || activeTags.every(tag => item.tags?.includes(tag)))
         ),
     })).filter(cat => cat.items.length > 0);
@@ -119,40 +141,48 @@ export default function CampusDashboard() {
     };
 
     return (
-        <div className="cd-layout">
+        <div className="flex min-h-screen bg-gray-50 font-sans text-gray-900">
 
-            {/* ── Sidebar ── */}
-            <aside className="cd-sidebar">
-                <div className="cd-sidebar-logo">
-                    <div className="cd-logo-icon">SH</div>
+            {/* Sidebar */}
+            <aside className="w-72 bg-white border-r border-gray-200 hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto">
+                <div className="p-6 text-xl font-bold text-blue-700 flex items-center gap-2 border-b border-gray-50">
+                    <div className="w-8 h-8 bg-blue-700 rounded-lg flex items-center justify-center text-white text-xs">SH</div>
                     Smart Campus
                 </div>
 
-                <nav className="cd-nav">
-                    <p className="cd-nav-section-label">Main Menu</p>
-                    {NAV_ITEMS.map((item, i) => (
-                        <button key={i} className={`cd-nav-link${item.active ? ' active' : ''}`}>
+                {/* Main Navigation */}
+                <nav className="p-4 space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Main Menu</p>
+                    {[
+                        { icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+                        { icon: <Box size={18} />, label: 'Resources', active: true },
+                        { icon: <Calendar size={18} />, label: 'Bookings' },
+                        { icon: <Wrench size={18} />, label: 'Maintenance' },
+                    ].map((item, idx) => (
+                        <a key={idx} href="#" className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${item.active ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}>
                             {item.icon} {item.label}
-                        </button>
+                        </a>
                     ))}
                 </nav>
 
-                <div className="cd-filters">
-                    <div className="cd-filter-header">
-                        Filters <Filter size={12} />
+                {/* Sidebar Filter Section */}
+                <div className="p-4 border-t border-gray-100 space-y-6">
+                    <div className="px-4 flex items-center justify-between">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filters</p>
+                        <Filter size={12} className="text-gray-400" />
                     </div>
 
-                    {/* Category filter */}
-                    <div className="cd-filter-section">
-                        <label className="cd-filter-label">
-                            Resource Type <ChevronDown size={14} />
+                    {/* Resource Type Filter */}
+                    <div className="space-y-2 px-2">
+                        <label className="text-xs font-semibold text-gray-700 px-2 flex items-center justify-between cursor-pointer group">
+                            Resource Type <ChevronDown size={14} className="text-gray-400 group-hover:text-blue-500" />
                         </label>
-                        <div className="cd-filter-list">
-                            {['All', ...CATEGORY_META.map(m => m.title)].map(cat => (
+                        <div className="space-y-1">
+                            {['All', ...CATEGORY_META.map(m => m.title)].map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => setActiveCategory(cat)}
-                                    className={`cd-filter-btn${activeCategory === cat ? ' active' : ''}`}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${activeCategory === cat ? 'bg-blue-600 text-white shadow-md shadow-blue-100 font-bold' : 'text-gray-600 hover:bg-gray-100'}`}
                                 >
                                     {cat}
                                 </button>
@@ -160,27 +190,27 @@ export default function CampusDashboard() {
                         </div>
                     </div>
 
-                    {/* Capacity slider */}
-                    <div>
-                        <div className="cd-capacity-row">
-                            <span className="cd-capacity-label">Min. Capacity</span>
-                            <span className="cd-capacity-badge">{minCapacity} pax</span>
+                    {/* Capacity Slider Filter */}
+                    <div className="space-y-3 px-4">
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs font-semibold text-gray-700">Min. Capacity</label>
+                            <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold">{minCapacity} pax</span>
                         </div>
                         <input
                             type="range" min="0" max="500" step="10"
                             value={minCapacity}
                             onChange={(e) => setMinCapacity(parseInt(e.target.value))}
-                            className="cd-range"
+                            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
                     </div>
 
-                    {/* Campus filter */}
-                    <div className="cd-filter-section">
-                        <label className="cd-filter-label">Campus / Location</label>
+                    {/* Location / Campus Filter */}
+                    <div className="space-y-2 px-4">
+                        <label className="text-xs font-semibold text-gray-700">Campus / Location</label>
                         <select
                             value={selectedCampus}
                             onChange={(e) => setSelectedCampus(e.target.value)}
-                            className="cd-select"
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         >
                             {campuses.map(c => (
                                 <option key={c} value={c}>{c === 'All' ? 'All Campuses' : c}</option>
@@ -188,129 +218,126 @@ export default function CampusDashboard() {
                         </select>
                     </div>
 
-                    {/* Preference tags */}
-                    <div>
-                        <label className="cd-filter-label" style={{ padding: '0 16px', marginBottom: 8 }}>Preferences</label>
-                        <div className="cd-tag-list">
+                    {/* Quick Tags Toggle */}
+                    <div className="px-4 space-y-3">
+                        <label className="text-xs font-semibold text-gray-700">Preferences</label>
+                        <div className="space-y-2">
                             {[
                                 { label: 'Air Conditioned', icon: <Wind size={12} />, value: 'AC' },
                                 { label: 'High-speed WiFi', icon: <Wifi size={12} />, value: 'Wifi' },
                             ].map((tag, i) => (
-                                <label key={i} className="cd-tag-item">
+                                <label key={i} className="flex items-center gap-3 text-xs text-gray-600 cursor-pointer hover:text-blue-600 transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={activeTags.includes(tag.value)}
                                         onChange={() => toggleTag(tag.value)}
+                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                     />
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        {tag.icon} {tag.label}
-                                    </span>
+                                    <span className="flex items-center gap-1.5">{tag.icon} {tag.label}</span>
                                 </label>
                             ))}
                         </div>
                     </div>
 
-                    <button className="cd-reset-btn" onClick={resetFilters}>Reset Filters</button>
+                    <button
+                        onClick={resetFilters}
+                        className="w-full py-2 text-xs text-gray-400 hover:text-blue-600 font-medium transition-colors"
+                    >
+                        Reset Filters
+                    </button>
                 </div>
             </aside>
 
-            {/* ── Main ── */}
-            <main className="cd-main">
-
-                {/* Top navbar */}
-                <header className="cd-topbar">
-                    <div className="cd-search-wrap">
-                        <span className="cd-search-icon"><Search size={18} /></span>
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto">
+                {/* Navbar */}
+                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
+                    <div className="relative w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search resources, labs, equipment..."
-                            className="cd-search-input"
+                            className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                         />
                     </div>
-                    <div className="cd-topbar-actions">
-                        <button className="cd-notif-btn">
+                    <div className="flex items-center gap-4">
+                        <button className="p-2 text-gray-400 hover:text-gray-600 relative">
                             <Bell size={20} />
-                            <span className="cd-notif-dot" />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                         </button>
-                        <div className="cd-user-chip">
-                            <span className="cd-user-name">Campus User</span>
-                            <div className="cd-avatar">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium hidden sm:block">Admin User</span>
+                            <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 overflow-hidden">
                                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="avatar" />
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <div className="cd-content">
-                    <h1 className="cd-page-title">Facilities & Assets Catalogue</h1>
+                <div className="p-8 max-w-7xl mx-auto">
+                    <h1 className="text-2xl font-bold mb-6">Facilities & Assets Catalogue</h1>
 
-                    {/* Stat cards */}
-                    <div className="cd-stat-grid">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                         {[
-                            { label: 'Total Resources', val: String(totalCount),  color: 'blue'   },
-                            { label: 'Available Now',   val: String(activeCount), color: 'green'  },
-                            { label: 'Most Used',       val: 'Auditorium',        color: 'orange' },
-                            { label: 'Active Bookings', val: '45',                color: 'purple' },
-                        ].map((s, i) => (
-                            <div key={i} className="cd-stat-card">
-                                <p className="cd-stat-label">{s.label}</p>
-                                <p className={`cd-stat-value ${s.color}`}>{s.val}</p>
+                            { label: 'Total Resources',  val: String(totalCount),  color: 'text-blue-600'   },
+                            { label: 'Available Now',    val: String(activeCount), color: 'text-green-600'  },
+                            { label: 'Most Used',        val: 'Auditorium',        color: 'text-orange-600' },
+                            { label: 'Active Bookings',  val: '45',                color: 'text-purple-600' },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
+                                <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.val}</p>
                             </div>
                         ))}
                     </div>
 
-                    {/* Featured auditorium */}
-                    <section className="cd-featured">
-                        <div className="cd-featured-box">
-                            <div className="cd-featured-inner">
+                    {/* Featured Auditorium Section */}
+                    <section className="mb-12">
+                        <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-8 rounded-3xl border border-orange-200 relative overflow-hidden">
+                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
                                 <div>
-                                    <div className="cd-event-tag">
+                                    <span className="px-3 py-1 bg-orange-200 text-orange-800 rounded-full text-xs font-bold flex items-center gap-1 w-fit mb-4">
                                         <Mic2 size={12} /> EVENT ENABLED
+                                    </span>
+                                    <h2 className="text-3xl font-black text-orange-900 mb-2">{auditorium.name || 'Main Auditorium SLIIT'}</h2>
+                                    <p className="text-orange-800/70 mb-4 max-w-md">State-of-the-art facility equipped with professional sound systems and {auditorium.cap ? `${auditorium.cap}+` : '1000+'} seating capacity.</p>
+                                    <div className="flex gap-6 mb-6">
+                                        <div className="text-center"><p className="text-xs text-orange-800 font-bold uppercase">Capacity</p><p className="text-xl font-bold">{auditorium.cap ? `${auditorium.cap}+` : '1000+'}</p></div>
+                                        <div className="text-center"><p className="text-xs text-orange-800 font-bold uppercase">Stage</p><p className="text-xl font-bold">Pro-Grade</p></div>
                                     </div>
-                                    <h2 className="cd-featured-title">
-                                        {auditorium.name || 'Main Auditorium SLIIT'}
-                                    </h2>
-                                    <p className="cd-featured-desc">
-                                        State-of-the-art facility equipped with professional sound systems and{' '}
-                                        {auditorium.cap ? `${auditorium.cap}+` : '1000+'} seating capacity.
-                                    </p>
-                                    <div className="cd-featured-stats">
-                                        <div>
-                                            <div className="cd-featured-stat-label">Capacity</div>
-                                            <div className="cd-featured-stat-val">{auditorium.cap ? `${auditorium.cap}+` : '1000+'}</div>
-                                        </div>
-                                        <div>
-                                            <div className="cd-featured-stat-label">Stage</div>
-                                            <div className="cd-featured-stat-val">Pro-Grade</div>
-                                        </div>
-                                    </div>
-                                    <div className="cd-featured-actions">
-                                        <button className="cd-btn-primary-orange">Create Event</button>
-                                        <button className="cd-btn-outline-orange" onClick={() => handleViewDetails('AUD_MAIN')}>
+                                    <div className="flex gap-3">
+                                        <button className="px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition-colors">Create Event</button>
+                                        <button
+                                            onClick={() => handleViewDetails('AUD_MAIN')}
+                                            className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold border border-orange-200 hover:bg-orange-50 transition-colors"
+                                        >
                                             View Schedule
                                         </button>
                                     </div>
                                 </div>
-                                <div className="cd-upcoming-card">
-                                    <div className="cd-upcoming-label">Upcoming Event</div>
-                                    <div className="cd-upcoming-title">Global Hackathon 2026</div>
-                                    <div className="cd-upcoming-time">Starts: Tomorrow, 09:00 AM</div>
+                                <div className="hidden md:block w-64 h-40 bg-white/50 rounded-2xl border border-orange-200 p-4">
+                                    <p className="text-xs font-bold text-orange-800 mb-2 underline">UPCOMING EVENT</p>
+                                    <p className="font-bold">Global Hackathon 2026</p>
+                                    <p className="text-xs text-orange-700 mt-1">Starts: Tomorrow, 09:00 AM</p>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* Filtered resource categories */}
+                    {/* Dynamic Filtered Categories */}
                     {filteredCategories.length > 0 ? (
                         filteredCategories.map((cat, idx) => (
-                            <section key={idx} className="cd-section">
-                                <div className="cd-section-header">
-                                    <div className={`cd-category-icon ${cat.color}`}>{cat.icon}</div>
-                                    <h3 className="cd-section-title">{cat.title}</h3>
+                            <section key={idx} className="mb-10">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <div className={`p-2 rounded-lg bg-${cat.color}-100 text-${cat.color}-600`}>
+                                        {cat.icon}
+                                    </div>
+                                    <h3 className="text-lg font-bold">{cat.title}</h3>
                                 </div>
-                                <div className="cd-resource-grid">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {cat.items.map(item => (
                                         <ResourceCard key={item.id} item={item} onViewDetails={handleViewDetails} />
                                     ))}
@@ -318,35 +345,37 @@ export default function CampusDashboard() {
                             </section>
                         ))
                     ) : (
-                        <div className="cd-empty">
-                            <Box size={48} style={{ color: '#d1d5db', margin: '0 auto' }} />
-                            <p className="cd-empty-text">No resources match your current filters.</p>
-                            <button className="cd-empty-link" onClick={resetFilters}>Clear all filters</button>
+                        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                            <Box className="mx-auto text-gray-300 mb-4" size={48} />
+                            <p className="text-gray-500 font-medium">No resources match your current filters.</p>
+                            <button onClick={resetFilters} className="mt-4 text-blue-600 font-bold text-sm">Clear all filters</button>
                         </div>
                     )}
 
-                    {/* Medical services */}
-                    <section className="cd-section">
-                        <div className="cd-section-header">
-                            <div className="cd-category-icon pink"><Stethoscope size={20} /></div>
-                            <h3 className="cd-section-title">Student Medical Services</h3>
-                        </div>
-                        <div className="cd-medical-card">
+                    {/* Student Medical Services */}
+                    <section className="mb-10">
+                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                            <Stethoscope className="text-pink-500" /> Student Medical Services
+                        </h3>
+                        <div className="bg-white p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
-                                <div className="cd-medical-name">{medCenter.name || 'University Health Center'}</div>
-                                <div className="cd-medical-sub">Dr. Aruni Perera (Available Today)</div>
+                                <p className="font-bold">{medCenter.name || 'University Health Center'}</p>
+                                <p className="text-sm text-gray-500">Dr. Aruni Perera (Available Today)</p>
                             </div>
-                            <div className="cd-slot-row">
+                            <div className="flex gap-2">
                                 {['09:00', '10:30', '14:00', '15:30'].map(slot => (
-                                    <button key={slot} className="cd-slot-btn">{slot}</button>
+                                    <button key={slot} className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-500 transition-all">
+                                        {slot}
+                                    </button>
                                 ))}
                             </div>
-                            <button className="cd-btn-quick-book">Quick Book</button>
+                            <button className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700">Quick Book</button>
                         </div>
                     </section>
                 </div>
             </main>
 
+            {/* Resource Detail Modal */}
             {selectedResource && (
                 <ResourceDetailModal
                     resource={selectedResource}

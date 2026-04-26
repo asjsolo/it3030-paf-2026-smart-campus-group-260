@@ -1,19 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import Layout from './components/Layout'
-import AdminLayout from './components/AdminLayout'
-import LoginPage from './pages/LoginPage'
-import AuthCallback from './pages/AuthCallback'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminResourceManagement from './pages/resources/AdminResourceManagement'
-import CampusDashboard from './pages/resources/CampusDashboard'
-import Unauthorized from './pages/Unauthorized'
-import CreateTicket from './pages/CreateTicket'
-import TicketDashboard from './pages/TicketDashboard'
-import TicketDetails from './pages/TicketDetails'
-import StudentDashboard from './pages/StudentDashboard'
-import { ResourceProvider } from './pages/resources/ResourceContext'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import CampusDashboard from "./pages/resources/CampusDashboard"
+import AdminResourceManagement from './pages/resources/AdminResourceManagement';
+import { ResourceProvider } from './pages/resources/ResourceContext';
+
+function App() {
+  // Read from local storage on startup
+  const [role, setRole] = useState(localStorage.getItem('userRole'));
+
+  // Quick logout function for your navbar (optional, but helpful for testing)
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    setRole(null);
+  };
 
 function WithLayout({ children }) {
   return <Layout>{children}</Layout>
@@ -33,93 +31,23 @@ function RoleHome() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+    <Router>
+      <div>
+        {/* Later, you can add your <Navbar /> component here so it shows on every page */}
 
-          {/* Technician master ticket dashboard */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute requiredRole="TECHNICIAN">
-                <WithLayout><TicketDashboard /></WithLayout>
-              </ProtectedRoute>
-            }
-          />
+        {/* ResourceProvider wraps both routes so Admin changes reflect on the Dashboard */}
+        <ResourceProvider>
+          <Routes>
+            {/* Your teammates will add their routes here! */}
+            <Route path="/" element={<h1>Smart Campus System</h1>} />
+            <Route path="/resource" element={<CampusDashboard />} />
+            <Route path="/resource-management" element={<AdminResourceManagement />} />
 
-          {/* Student personal dashboard */}
-          <Route
-            path="/my-tickets"
-            element={
-              <ProtectedRoute requiredRole="USER">
-                <WithLayout><StudentDashboard /></WithLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* File a new ticket — students only */}
-          <Route
-            path="/create-ticket"
-            element={
-              <ProtectedRoute requiredRole="USER">
-                <WithLayout><CreateTicket /></WithLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Ticket detail — both roles */}
-          <Route
-            path="/ticket/:id"
-            element={
-              <ProtectedRoute>
-                <WithLayout><TicketDetails /></WithLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Admin — User Management */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <WithAdminLayout><AdminDashboard /></WithAdminLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Admin — Resource Management */}
-          <Route
-            path="/admin/resources"
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <ResourceProvider>
-                  <WithAdminLayout><AdminResourceManagement /></WithAdminLayout>
-                </ResourceProvider>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Campus Resource Dashboard — all authenticated users */}
-          <Route
-            path="/campus"
-            element={
-              <ProtectedRoute>
-                <ResourceProvider>
-                  <CampusDashboard />
-                </ResourceProvider>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Default — route by role */}
-          <Route path="/" element={<RoleHome />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
-  )
+            {/* Example of how you will add your Module C later: */}
+            {/* <Route path="/tickets" element={<TicketPage />} /> */}
+          </Routes>
+        </ResourceProvider>
+      </div>
+    </Router>
+  );
 }
