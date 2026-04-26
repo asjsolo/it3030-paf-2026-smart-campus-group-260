@@ -136,137 +136,182 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div style={styles.page}>
-      <nav style={styles.nav}>
-        <span style={styles.navBrand}>🏛️ Smart Campus — Admin</span>
-        <div style={styles.navRight}>
-          <img src={user?.picture} alt="avatar" style={styles.avatar} />
-          <span style={styles.navName}>{user?.name}</span>
-          <span style={styles.adminBadge}>ADMIN</span>
-          <NotificationPanel />
-          <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
-        </div>
-      </nav>
-
-      <main style={styles.main}>
-        <h2 style={styles.heading}>Admin Dashboard</h2>
-
-        {message && <div style={styles.toast}>{message}</div>}
-
-        <div style={styles.statsRow}>
-          <StatCard label="Total" value={users.length} icon="👥" />
-          <StatCard label="Admins" value={users.filter((u) => u.role === 'ADMIN').length} icon="🛡️" />
-          <StatCard label="Technicians" value={users.filter((u) => u.role === 'TECHNICIAN').length} icon="🔧" />
-          <StatCard label="Students" value={users.filter((u) => u.role === 'USER').length} icon="🎓" />
-        </div>
-
-        {/* Create Technician account form */}
-        <div style={styles.createCard}>
-          <h3 style={styles.tableTitle}>Create Technician or Student Account</h3>
-          {error && !modal && <div style={styles.errorBox}>{error}</div>}
-          <form onSubmit={handleCreateUser} style={styles.createForm}>
-            <input style={styles.input} type="text" name="name" placeholder="Full name"
-                   value={newUser.name} onChange={handleNewUserChange} />
-            <input style={styles.input} type="email" name="email" placeholder="Email address"
-                   value={newUser.email} onChange={handleNewUserChange} />
-            <input style={styles.input} type="password" name="password" placeholder="Password (min. 6)"
-                   value={newUser.password} onChange={handleNewUserChange} />
-            <select style={styles.input} name="role" value={newUser.role} onChange={handleNewUserChange}>
-              <option value="TECHNICIAN">Technician</option>
-              <option value="USER">Student</option>
-              <option value="ADMIN">Admin</option>
-            </select>
-            <button style={styles.createBtn} type="submit" disabled={creating}>
-              {creating ? 'Creating…' : 'Create Account'}
-            </button>
-          </form>
-        </div>
-
-        <div style={styles.tableCard}>
-          <h3 style={styles.tableTitle}>User Management</h3>
-          {loadingUsers ? (
-            <p style={styles.loading}>Loading users...</p>
-          ) : (
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  {['Name', 'Email', 'Role', 'Status', 'Actions'].map((h) => (
-                    <th key={h} style={styles.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => {
-                  const isAdmin = u.role === 'ADMIN'
-                  return (
-                    <tr key={u.id} style={styles.tr}>
-                      <td style={styles.td}>
-                        <div style={styles.userCell}>
-                          {u.picture && <img src={u.picture} alt="" style={styles.miniAvatar} />}
-                          {u.name}
-                        </div>
-                      </td>
-                      <td style={styles.td}>{u.email}</td>
-                      <td style={styles.td}>
-                        <span style={{ ...styles.rolePill, ...rolePillColor(u.role) }}>{u.role}</span>
-                      </td>
-                      <td style={styles.td}>
-                        <span style={{
-                          ...styles.statusPill,
-                          background: u.active ? '#e8f5e9' : '#fdecea',
-                          color: u.active ? '#27ae60' : '#c0392b',
-                        }}>
-                          {u.active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        {isAdmin ? (
-                          <span style={styles.noActions}>—</span>
-                        ) : (
-                          <div style={styles.actions}>
-                            <button style={styles.btnView} onClick={() => openView(u)}>View</button>
-                            <button style={styles.btnEdit} onClick={() => openEdit(u)}>Edit</button>
-                            <button
-                              style={u.active ? styles.btnDeactivate : styles.btnActivate}
-                              onClick={() => handleToggleActive(u)}
-                            >
-                              {u.active ? 'Deactivate' : 'Activate'}
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Sidebar */}
+      <aside style={{
+        width: '260px',
+        backgroundColor: '#1a1a2e',
+        borderRight: '1px solid #333',
+        padding: '24px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <div style={{ padding: '0 16px 32px 16px' }}>
+          <h2 style={{ color: '#fff', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.5rem' }}>🏛️</span> SmartCampus
+          </h2>
+          {user && (
+            <div style={{ marginTop: 12, fontSize: '0.85rem', color: '#ccc' }}>
+              {user.name} · <span style={{ color: '#64b5f6' }}>ADMIN</span>
+            </div>
           )}
+        </div>
+
+        <nav style={{ flex: 1 }}>
+          {/* Admin can see dashboard - no navigation needed, but we keep structure for consistency */}
+        </nav>
+
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              textDecoration: 'none',
+              color: '#ff6b6b',
+              backgroundColor: 'transparent',
+              borderRadius: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+              marginBottom: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '0.95rem',
+            }}
+          >
+            🚪 Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main style={{ flex: 1, padding: '40px', overflowY: 'auto', backgroundColor: '#f0f2f5' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <NotificationPanel />
+        </div>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a2e', marginBottom: 24 }}>Admin Dashboard</h2>
+
+          {message && <div style={{ background: '#d4edda', color: '#155724', padding: '10px 16px', borderRadius: 8, marginBottom: 20, fontSize: 14 }}>{message}</div>}
+
+          <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
+            <StatCard label="Total" value={users.length} icon="👥" />
+            <StatCard label="Admins" value={users.filter((u) => u.role === 'ADMIN').length} icon="🛡️" />
+            <StatCard label="Technicians" value={users.filter((u) => u.role === 'TECHNICIAN').length} icon="🔧" />
+            <StatCard label="Students" value={users.filter((u) => u.role === 'USER').length} icon="🎓" />
+          </div>
+
+          {/* Create Technician account form */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginBottom: 28 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#1a1a2e', marginBottom: 16 }}>Create Technician or Student Account</h3>
+            {error && !modal && <div style={{ background: '#fff0f0', border: '1px solid #ffcccc', color: '#c0392b', borderRadius: 6, padding: '8px 12px', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+            <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, alignItems: 'center' }}>
+              <input style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} type="text" name="name" placeholder="Full name"
+                     value={newUser.name} onChange={handleNewUserChange} />
+              <input style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} type="email" name="email" placeholder="Email address"
+                     value={newUser.email} onChange={handleNewUserChange} />
+              <input style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} type="password" name="password" placeholder="Password (min. 6)"
+                     value={newUser.password} onChange={handleNewUserChange} />
+              <select style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} name="role" value={newUser.role} onChange={handleNewUserChange}>
+                <option value="TECHNICIAN">Technician</option>
+                <option value="USER">Student</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+              <button style={{ padding: '10px 16px', background: '#0f3460', color: '#fff', border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer' }} type="submit" disabled={creating}>
+                {creating ? 'Creating…' : 'Create Account'}
+              </button>
+            </form>
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflowX: 'auto' }}>
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#1a1a2e', marginBottom: 16 }}>User Management</h3>
+            {loadingUsers ? (
+              <p style={{ color: '#888', fontSize: 14 }}>Loading users...</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['Name', 'Email', 'Role', 'Status', 'Actions'].map((h) => (
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #f0f2f5' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => {
+                    const isAdmin = u.role === 'ADMIN'
+                    return (
+                      <tr key={u.id} style={{ borderBottom: '1px solid #f0f2f5' }}>
+                        <td style={{ padding: '12px 14px', fontSize: 14, color: '#333' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            {u.picture && <img src={u.picture} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />}
+                            {u.name}
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 14, color: '#333' }}>{u.email}</td>
+                        <td style={{ padding: '12px 14px', fontSize: 14, color: '#333' }}>
+                          <span style={{ ...({ padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, display: 'inline-block' }), ...rolePillColor(u.role) }}>{u.role}</span>
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 14, color: '#333' }}>
+                          <span style={{
+                            padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, display: 'inline-block',
+                            background: u.active ? '#e8f5e9' : '#fdecea',
+                            color: u.active ? '#27ae60' : '#c0392b',
+                          }}>
+                            {u.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 14, color: '#333' }}>
+                          {isAdmin ? (
+                            <span style={{ color: '#bbb', fontSize: 13 }}>—</span>
+                          ) : (
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              <button style={{ padding: '5px 10px', background: '#e8f0fe', color: '#1a73e8', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer' }} onClick={() => openView(u)}>View</button>
+                              <button style={{ padding: '5px 10px', background: '#fff3e0', color: '#e67e22', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer' }} onClick={() => openEdit(u)}>Edit</button>
+                              <button
+                                style={{ padding: '5px 10px', background: u.active ? '#fdecea' : '#e8f5e9', color: u.active ? '#c0392b' : '#27ae60', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                                onClick={() => handleToggleActive(u)}
+                              >
+                                {u.active ? 'Deactivate' : 'Activate'}
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </main>
 
       {/* View / Edit Modal */}
       {modal && (
-        <div style={styles.backdrop} onClick={closeModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={closeModal}>
+          <div style={{ background: '#fff', borderRadius: 12, width: '90%', maxWidth: 480, padding: '24px 28px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1a1a2e' }}>
                 {modal.mode === 'view' ? 'User Details' : 'Edit User'}
               </h3>
-              <button style={styles.closeBtn} onClick={closeModal}>✕</button>
+              <button style={{ background: 'transparent', border: 'none', fontSize: 18, color: '#888', cursor: 'pointer' }} onClick={closeModal}>✕</button>
             </div>
 
             {modal.mode === 'view' ? (
-              <div style={styles.viewBody}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Row label="Name" value={modal.data.name} />
                 <Row label="Email" value={modal.data.email} />
                 <Row label="Role">
-                  <span style={{ ...styles.rolePill, ...rolePillColor(modal.data.role) }}>
+                  <span style={{ ...({ padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, display: 'inline-block' }), ...rolePillColor(modal.data.role) }}>
                     {modal.data.role}
                   </span>
                 </Row>
                 <Row label="Status">
                   <span style={{
-                    ...styles.statusPill,
+                    padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, display: 'inline-block',
                     background: modal.data.active ? '#e8f5e9' : '#fdecea',
                     color: modal.data.active ? '#27ae60' : '#c0392b',
                   }}>
@@ -276,22 +321,22 @@ export default function AdminDashboard() {
                 <Row label="ID" value={modal.data.id} />
               </div>
             ) : (
-              <form onSubmit={handleSaveEdit} style={styles.editBody}>
-                {error && <div style={styles.errorBox}>{error}</div>}
-                <label style={styles.label}>Name</label>
-                <input style={styles.input} name="name" value={editForm.name} onChange={handleEditChange} />
-                <label style={styles.label}>Email</label>
-                <input style={styles.input} name="email" type="email" value={editForm.email} onChange={handleEditChange} />
-                <label style={styles.label}>Role</label>
-                <select style={styles.input} name="role" value={editForm.role} onChange={handleEditChange}>
+              <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {error && <div style={{ background: '#fff0f0', border: '1px solid #ffcccc', color: '#c0392b', borderRadius: 6, padding: '8px 12px', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, marginTop: 6 }}>Name</label>
+                <input style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} name="name" value={editForm.name} onChange={handleEditChange} />
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, marginTop: 6 }}>Email</label>
+                <input style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} name="email" type="email" value={editForm.email} onChange={handleEditChange} />
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, marginTop: 6 }}>Role</label>
+                <select style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} name="role" value={editForm.role} onChange={handleEditChange}>
                   {EDITABLE_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
-                <label style={styles.label}>New password (leave blank to keep)</label>
-                <input style={styles.input} name="password" type="password"
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, marginTop: 6 }}>New password (leave blank to keep)</label>
+                <input style={{ padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%' }} name="password" type="password"
                        placeholder="Optional" value={editForm.password} onChange={handleEditChange} />
-                <div style={styles.modalActions}>
-                  <button type="button" style={styles.btnCancel} onClick={closeModal}>Cancel</button>
-                  <button type="submit" style={styles.btnSave} disabled={saving}>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+                  <button type="button" style={{ padding: '9px 16px', background: '#f0f2f5', color: '#555', border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer' }} onClick={closeModal}>Cancel</button>
+                  <button type="submit" style={{ padding: '9px 16px', background: '#0f3460', color: '#fff', border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer' }} disabled={saving}>
                     {saving ? 'Saving…' : 'Save Changes'}
                   </button>
                 </div>
@@ -306,9 +351,9 @@ export default function AdminDashboard() {
 
 function Row({ label, value, children }) {
   return (
-    <div style={styles.row}>
-      <span style={styles.rowLabel}>{label}</span>
-      <span style={styles.rowValue}>{children ?? value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f2f5' }}>
+      <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 14, color: '#222' }}>{children ?? value}</span>
     </div>
   )
 }
@@ -323,149 +368,12 @@ function rolePillColor(role) {
 
 function StatCard({ label, value, icon }) {
   return (
-    <div style={styles.statCard}>
-      <span style={styles.statIcon}>{icon}</span>
+    <div style={{ background: '#fff', borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flex: '1 1 160px' }}>
+      <span style={{ fontSize: 32 }}>{icon}</span>
       <div>
-        <div style={styles.statValue}>{value}</div>
-        <div style={styles.statLabel}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 700, color: '#1a1a2e' }}>{value}</div>
+        <div style={{ fontSize: 13, color: '#888' }}>{label}</div>
       </div>
     </div>
   )
-}
-
-const styles = {
-  page: { minHeight: '100vh', background: '#f0f2f5' },
-  nav: {
-    background: '#1a1a2e', padding: '0 32px', height: 64,
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-  },
-  navBrand: { color: '#fff', fontSize: 18, fontWeight: 700 },
-  navRight: { display: 'flex', alignItems: 'center', gap: 12 },
-  avatar: { width: 36, height: 36, borderRadius: '50%', border: '2px solid #e84393' },
-  navName: { color: '#ccc', fontSize: 14 },
-  adminBadge: {
-    background: '#e84393', color: '#fff', fontSize: 10, fontWeight: 700,
-    padding: '3px 8px', borderRadius: 99, letterSpacing: 1,
-  },
-  logoutBtn: {
-    background: 'transparent', border: '1px solid #555', color: '#ccc',
-    padding: '6px 14px', borderRadius: 6, fontSize: 13, cursor: 'pointer',
-  },
-  main: { padding: '40px 32px', maxWidth: 1200, margin: '0 auto' },
-  heading: { fontSize: 24, fontWeight: 700, color: '#1a1a2e', marginBottom: 24 },
-  toast: {
-    background: '#d4edda', color: '#155724', padding: '10px 16px',
-    borderRadius: 8, marginBottom: 20, fontSize: 14,
-  },
-  statsRow: { display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' },
-  statCard: {
-    background: '#fff', borderRadius: 12, padding: '20px 24px',
-    display: 'flex', alignItems: 'center', gap: 16,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flex: '1 1 160px',
-  },
-  statIcon: { fontSize: 32 },
-  statValue: { fontSize: 28, fontWeight: 700, color: '#1a1a2e' },
-  statLabel: { fontSize: 13, color: '#888' },
-  tableCard: {
-    background: '#fff', borderRadius: 12, padding: '24px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflowX: 'auto',
-  },
-  createCard: {
-    background: '#fff', borderRadius: 12, padding: '24px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginBottom: 28,
-  },
-  createForm: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: 12, alignItems: 'center',
-  },
-  input: {
-    padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: 7,
-    fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', width: '100%',
-  },
-  createBtn: {
-    padding: '10px 16px', background: '#0f3460', color: '#fff',
-    border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-  },
-  errorBox: {
-    background: '#fff0f0', border: '1px solid #ffcccc', color: '#c0392b',
-    borderRadius: 6, padding: '8px 12px', fontSize: 13, marginBottom: 12,
-  },
-  tableTitle: { fontSize: 17, fontWeight: 700, color: '#1a1a2e', marginBottom: 16 },
-  loading: { color: '#888', fontSize: 14 },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: {
-    textAlign: 'left', padding: '10px 14px', fontSize: 12, fontWeight: 700,
-    color: '#888', textTransform: 'uppercase', letterSpacing: 0.5,
-    borderBottom: '2px solid #f0f2f5',
-  },
-  tr: { borderBottom: '1px solid #f0f2f5' },
-  td: { padding: '12px 14px', fontSize: 14, color: '#333' },
-  userCell: { display: 'flex', alignItems: 'center', gap: 10 },
-  miniAvatar: { width: 28, height: 28, borderRadius: '50%' },
-  rolePill: {
-    padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600,
-    display: 'inline-block',
-  },
-  statusPill: {
-    padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600,
-    display: 'inline-block',
-  },
-  actions: { display: 'flex', gap: 6, flexWrap: 'wrap' },
-  noActions: { color: '#bbb', fontSize: 13 },
-  btnView: {
-    padding: '5px 10px', background: '#e8f0fe', color: '#1a73e8',
-    border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  },
-  btnEdit: {
-    padding: '5px 10px', background: '#fff3e0', color: '#e67e22',
-    border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  },
-  btnDeactivate: {
-    padding: '5px 10px', background: '#fdecea', color: '#c0392b',
-    border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  },
-  btnActivate: {
-    padding: '5px 10px', background: '#e8f5e9', color: '#27ae60',
-    border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  },
-
-  // Modal
-  backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
-  },
-  modal: {
-    background: '#fff', borderRadius: 12, width: '90%', maxWidth: 480,
-    padding: '24px 28px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-  },
-  modalHeader: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 18,
-  },
-  modalTitle: { fontSize: 18, fontWeight: 700, color: '#1a1a2e' },
-  closeBtn: {
-    background: 'transparent', border: 'none', fontSize: 18, color: '#888',
-    cursor: 'pointer',
-  },
-  viewBody: { display: 'flex', flexDirection: 'column', gap: 10 },
-  row: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '8px 0', borderBottom: '1px solid #f0f2f5',
-  },
-  rowLabel: { fontSize: 13, color: '#888', fontWeight: 600 },
-  rowValue: { fontSize: 14, color: '#222' },
-  editBody: { display: 'flex', flexDirection: 'column', gap: 8 },
-  label: { fontSize: 12, color: '#888', fontWeight: 600, marginTop: 6 },
-  modalActions: {
-    display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16,
-  },
-  btnCancel: {
-    padding: '9px 16px', background: '#f0f2f5', color: '#555',
-    border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-  },
-  btnSave: {
-    padding: '9px 16px', background: '#0f3460', color: '#fff',
-    border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-  },
 }
