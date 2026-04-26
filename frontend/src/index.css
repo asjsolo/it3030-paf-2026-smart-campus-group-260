@@ -1,133 +1,127 @@
 /* --- Global Reset & Typography --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  /* Neon Glass Theme */
-  --primary-accent: #8b5cf6; 
-  --primary-hover: #a78bfa;
-  --text-main: #f8fafc; 
-  --text-muted: #94a3b8; 
-  
-  /* Glass Variables */
-  --glass-bg: rgba(23, 21, 39, 0.45); /* Translucent dark base */
-  --glass-border: rgba(255, 255, 255, 0.08); /* Frosted edge */
-  --glass-highlight: rgba(255, 255, 255, 0.03); /* Inner top light */
+  /* Clean, Professional Theme */
+  --primary-accent: #0f3460;
+  --primary-hover: #1a4a7a;
+  --text-main: #1a1a2e;
+  --text-muted: #666;
+  --bg-color: #f8f9fa;
+  --border-color: #e0e0e0;
+  --surface-color: #ffffff;
+
+  /* Glass Variables (not used, kept for compatibility) */
+  --glass-bg: rgba(23, 21, 39, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
   --input-bg: rgba(0, 0, 0, 0.25);
-  
-  /* Exaggerated Curves & Depth */
-  --radius-sm: 14px;
-  --radius-md: 28px; /* Deep rounded corners for the card */
-  --shadow-deep: 0 24px 48px rgba(0, 0, 0, 0.6);
+
+  /* Clean Curves & Depth */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --shadow-deep: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  
-  /* This dark mesh gradient is CRUCIAL. The glass needs something to blur! */
-  background-color: #0b0914;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(55, 30, 110, 0.4), transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(20, 50, 90, 0.3), transparent 50%);
-  background-attachment: fixed;
+
+  /* Clean Light Background */
+  background-color: #f0f2f5;
   min-height: 100vh;
 }
 
-/* --- Liquid Glass Layout Components --- */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* --- Card Component --- */
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px); /* The liquid glass blur */
-  -webkit-backdrop-filter: blur(24px);
+  background: var(--surface-color);
   border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  padding: 32px;
-  
-  /* Multi-layered shadow for intense depth + a subtle inner light for realism */
-  box-shadow: 
-    var(--shadow-deep),
-    inset 0 1px 1px var(--glass-highlight);
-    
-  /* Entry animation for the card */
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  box-shadow: var(--shadow-deep);
   animation: slideUpFloat 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* --- Animated Form Components --- */
 .input-field {
   width: 100%;
-  padding: 16px 20px;
-  border: 1px solid var(--glass-border);
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   font-size: 0.95rem;
   font-family: inherit;
-  background-color: var(--input-bg);
+  background-color: var(--surface-color);
   color: var(--text-main);
-  
-  /* Smooth, springy animations */
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.3s ease;
 }
 
 .input-field::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
 }
 
 .input-field:hover {
-  background-color: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-accent);
+  box-shadow: 0 2px 8px rgba(15, 52, 96, 0.1);
 }
 
 .input-field:focus {
   outline: none;
-  background-color: rgba(0, 0, 0, 0.5);
   border-color: var(--primary-accent);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-2px); /* Lifts up slightly when typing */
+  box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
 }
 
-/* --- Neon Buttons --- */
+/* --- Buttons --- */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-accent), #6d28d9);
+  background: var(--primary-accent);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none;
   border-radius: var(--radius-sm);
   font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+  padding: 10px 20px;
   cursor: pointer;
-  
-  /* Buttery transition */
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.2s ease;
   width: 100%;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 52, 96, 0.2);
 }
 
 .btn-primary:active {
-  transform: translateY(1px) scale(0.98); /* Squishes satisfyingly when clicked */
-  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2);
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(15, 52, 96, 0.15);
 }
 
 /* --- Form Layout & Typography --- */
 .form-section {
-  margin-top: 32px;
-  margin-bottom: 20px;
+  margin-top: 24px;
+  margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--glass-border);
-  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--primary-accent);
   display: flex;
@@ -136,7 +130,7 @@ body {
 }
 
 .helper-text {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin-top: 8px;
   display: block;
@@ -145,17 +139,15 @@ body {
 label {
   font-weight: 600;
   font-size: 0.85rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-h1, h2, h3 {
-  font-weight: 700; 
   color: var(--text-main);
 }
 
-/* --- Advanced Animations --- */
+h1, h2, h3 {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* --- Animations --- */
 @keyframes slideUpFloat {
   0% { opacity: 0; transform: translateY(30px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -167,7 +159,7 @@ h1, h2, h3 {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.4s ease forwards;
 }
 
 @keyframes shake {
@@ -177,157 +169,37 @@ h1, h2, h3 {
 }
 
 .animate-shake {
-  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
-
-/* Feedback blocks with glass effect */
-.feedback-glass {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  animation: shake 0.4s both;
 }
 
 /* --- Custom Select Dropdowns --- */
-select.input-field {
-  /* Strip away the default browser arrow */
-  appearance: none; 
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  
-  /* Add a custom, sleek custom arrow using an inline SVG */
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px top 50%;
-  background-size: 12px auto;
-  cursor: pointer;
-}
-
-/* Ensure the dropdown menu itself stays dark */
-select.input-field option {
-  background-color: var(--surface-color);
-  color: var(--text-main);
-  padding: 10px;
-}
-
-/* --- Custom File Uploader --- */
-input[type="file"].input-field {
-  padding: 10px 16px; /* Slightly adjusted padding to fit the inner button */
-}
-
-/* Target the specific "Choose File" button inside the input */
-input[type="file"].input-field::file-selector-button {
-  background: rgba(139, 92, 246, 0.15); /* Translucent purple */
-  border: 1px solid var(--primary-accent);
-  color: var(--primary-accent);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  margin-right: 16px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-input[type="file"].input-field::file-selector-button:hover {
-  background: var(--primary-accent);
-  color: white;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
-}
-
-/* --- Custom React Dropdown Menu --- */
 .custom-select-menu {
   position: absolute;
   top: 100%;
   left: 0;
   width: 100%;
- background: rgba(15, 13, 25, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  margin-top: 8px;
+  margin-top: 4px;
   padding: 0;
   list-style: none;
   z-index: 100;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   animation: fadeIn 0.2s ease-out forwards;
 }
 
 .custom-select-option {
-  padding: 12px 16px;
+  padding: 10px 16px;
   cursor: pointer;
   color: var(--text-main);
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 }
 
 .custom-select-option:hover {
-  background: rgba(139, 92, 246, 0.25); /* Neon purple hover effect */
-}
-
-/* --- LIVELY ANIMATION UPGRADE PACK --- */
-
-/* 1. Continuous "Breathing" Card Float */
-.card {
-  /* Keeps the original entrance animation, then starts floating indefinitely */
-  animation: 
-    slideUpFloat 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-    ambientFloat 6s ease-in-out 0.6s infinite alternate;
-}
-
-@keyframes ambientFloat {
-  0% { 
-    transform: translateY(0); 
-    box-shadow: var(--shadow-deep), inset 0 1px 1px var(--glass-highlight); 
-  }
-  100% { 
-    transform: translateY(-8px); 
-    box-shadow: 0 32px 56px rgba(0, 0, 0, 0.7), inset 0 2px 2px rgba(255, 255, 255, 0.05); 
-  }
-}
-
-/* 2. Springy Input Fields */
-.input-field {
-  /* Using a custom cubic-bezier creates a "bouncy/springy" feeling */
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.input-field:hover {
-  transform: scale(1.01) translateY(-2px);
-  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.15);
-}
-
-/* 3. Sweeping Glass Shine on Buttons */
-.btn-primary {
-  position: relative;
-  overflow: hidden;
-}
-
-/* The invisible glass reflection */
-.btn-primary::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25), transparent);
-  transform: skewX(-25deg);
-  transition: all 0s ease; /* Resets instantly when mouse leaves */
-}
-
-/* The shine sweeps across when hovered */
-.btn-primary:hover::after {
-  left: 150%;
-  transition: all 0.6s ease-in-out;
-}
-
-/* 4. Dropdown Options Slide-in Effect */
-.custom-select-option {
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.custom-select-option:hover {
-  background: rgba(139, 92, 246, 0.3);
-  padding-left: 24px; /* Satisfying slide to the right */
-  color: #ffffff;
-  font-weight: 500;
+  background: var(--bg-color);
+  border-left: 3px solid var(--primary-accent);
+  padding-left: 20px;
 }

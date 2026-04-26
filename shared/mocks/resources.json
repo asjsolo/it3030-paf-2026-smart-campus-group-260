@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "name": "Lecture Hall A1",
+    "type": "LECTURE_HALL",
+    "capacity": 200,
+    "location": "Block A, Level 1",
+    "status": "ACTIVE",
+    "description": "Large lecture hall with projector, microphone system, and air conditioning.",
+    "availabilityWindows": "[{\"day\":\"MON\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"TUE\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"WED\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"THU\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"FRI\",\"start\":\"08:00\",\"end\":\"18:00\"}]",
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 2,
+    "name": "Computer Lab 301",
+    "type": "LAB",
+    "capacity": 40,
+    "location": "Block C, Level 3",
+    "status": "ACTIVE",
+    "description": "40 workstations running Ubuntu 22.04. Equipped with development tools and high-speed internet.",
+    "availabilityWindows": "[{\"day\":\"MON\",\"start\":\"08:00\",\"end\":\"18:00\"},{\"day\":\"TUE\",\"start\":\"08:00\",\"end\":\"18:00\"},{\"day\":\"WED\",\"start\":\"08:00\",\"end\":\"18:00\"},{\"day\":\"THU\",\"start\":\"08:00\",\"end\":\"18:00\"},{\"day\":\"FRI\",\"start\":\"08:00\",\"end\":\"16:00\"}]",
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 3,
+    "name": "Meeting Room B2",
+    "type": "MEETING_ROOM",
+    "capacity": 12,
+    "location": "Block B, Level 2",
+    "status": "ACTIVE",
+    "description": "Small meeting room with a whiteboard, TV screen, and video conferencing setup.",
+    "availabilityWindows": "[{\"day\":\"MON\",\"start\":\"09:00\",\"end\":\"17:00\"},{\"day\":\"TUE\",\"start\":\"09:00\",\"end\":\"17:00\"},{\"day\":\"WED\",\"start\":\"09:00\",\"end\":\"17:00\"},{\"day\":\"THU\",\"start\":\"09:00\",\"end\":\"17:00\"},{\"day\":\"FRI\",\"start\":\"09:00\",\"end\":\"15:00\"}]",
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 4,
+    "name": "Projector – Canon WX450ST",
+    "type": "EQUIPMENT",
+    "capacity": null,
+    "location": "AV Store, Block A, Level 1",
+    "status": "ACTIVE",
+    "description": "Short-throw projector. Loan duration max 3 days. Collect from AV Store.",
+    "availabilityWindows": null,
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 5,
+    "name": "Science Lab 102",
+    "type": "LAB",
+    "capacity": 25,
+    "location": "Block D, Level 1",
+    "status": "OUT_OF_SERVICE",
+    "description": "Currently undergoing equipment maintenance. Estimated return: 2026-04-20.",
+    "availabilityWindows": null,
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 6,
+    "name": "Seminar Room C3",
+    "type": "MEETING_ROOM",
+    "capacity": 30,
+    "location": "Block C, Level 3",
+    "status": "ACTIVE",
+    "description": "Seminar-style room with tiered seating, ideal for workshops and presentations.",
+    "availabilityWindows": "[{\"day\":\"MON\",\"start\":\"08:00\",\"end\":\"20:00\"},{\"day\":\"WED\",\"start\":\"08:00\",\"end\":\"20:00\"},{\"day\":\"FRI\",\"start\":\"08:00\",\"end\":\"16:00\"},{\"day\":\"SAT\",\"start\":\"09:00\",\"end\":\"13:00\"}]",
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 7,
+    "name": "Camera – Sony ZV-E10",
+    "type": "EQUIPMENT",
+    "capacity": null,
+    "location": "AV Store, Block A, Level 1",
+    "status": "ACTIVE",
+    "description": "Mirrorless camera for events and recordings. Includes kit lens and SD card.",
+    "availabilityWindows": null,
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  },
+  {
+    "id": 8,
+    "name": "Lecture Hall B2",
+    "type": "LECTURE_HALL",
+    "capacity": 120,
+    "location": "Block B, Level 2",
+    "status": "ACTIVE",
+    "description": "Medium-sized hall with dual projectors and tiered seating.",
+    "availabilityWindows": "[{\"day\":\"MON\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"TUE\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"WED\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"THU\",\"start\":\"08:00\",\"end\":\"21:00\"},{\"day\":\"FRI\",\"start\":\"08:00\",\"end\":\"18:00\"},{\"day\":\"SAT\",\"start\":\"09:00\",\"end\":\"14:00\"}]",
+    "createdAt": "2026-04-10T08:00:00",
+    "updatedAt": "2026-04-10T08:00:00"
+  }
+]

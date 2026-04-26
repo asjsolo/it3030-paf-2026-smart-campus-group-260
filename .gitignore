@@ -1,6 +1,34 @@
-node_modules/
-build/
-target/
+# --- Spring Boot & Java ---
 *.class
+*.log
+*.ctxt
+.mtj.tmp/
 *.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# Ignore Spring Boot compiled output
+target/
+build/
+.mvn/wrapper/maven-wrapper.jar
+
+# --- React / Node.js (CRITICAL FOR ASSIGNMENT) ---
+node_modules/
+dist/
 .env
+
+# --- OS & IDE Files ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- Secrets — never commit ---
+application-local.properties
+application-local.yml
+.env.local
