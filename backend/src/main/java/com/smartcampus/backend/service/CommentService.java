@@ -4,6 +4,7 @@ import com.smartcampus.backend.entity.Comment;
 import com.smartcampus.backend.entity.IncidentTicket;
 import com.smartcampus.backend.repository.CommentRepository;
 import com.smartcampus.backend.repository.IncidentTicketRepository;
+import com.smartcampus.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,43 +12,44 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final IncidentTicketRepository ticketRepository;
+    private final NotificationService notificationService;
 
-    // We inject BOTH repositories because we need to look up the ticket before saving the comment
-    public CommentService(CommentRepository commentRepository, IncidentTicketRepository ticketRepository) {
+    public CommentService(CommentRepository commentRepository,
+                          IncidentTicketRepository ticketRepository,
+                          NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.ticketRepository = ticketRepository;
+        this.notificationService = notificationService;
     }
 
-    // --- Business Logic Methods ---
-
-    // 1. Add a new comment to an existing ticket
-    public Comment addComment(Long ticketId, Comment comment) {
-        // Step A: Find the ticket in the database. If it doesn't exist, throw an error.
+    /**
+     * Add a comment to a ticket. The caller's email is passed in so we can avoid
+     * notifying users about their own comments.
+     */
+    public Comment addComment(Long ticketId, Comment comment, String commenterEmail) {
         IncidentTicket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + ticketId));
-        
-        // Step B: Attach the ticket to this new comment
+
         comment.setIncidentTicket(ticket);
-        
-        // Step C: Save the comment to the database
-        return commentRepository.save(comment);
+        Comment saved = commentRepository.save(comment);
+
+        // Only notify if the comment is from someone other than the ticket creator.
+        String ownerEmail = ticket.getCreatedByEmail();
+        if (ownerEmail != null && !ownerEmail.equalsIgnoreCase(commenterEmail)) {
+            notificationService.notifyTicketComment(
+                    ownerEmail, ticket.getId(), ticket.getTitle(), comment.getAuthor());
+        }
+        return saved;
     }
-    
-    // 2. Delete a comment (Module requirement: "edit/delete as appropriate")
+
     public void deleteComment(Long commentId) {
         commentRepository.deleteById(commentId);
     }
 
-    // 3. Edit an existing comment
     public Comment editComment(Long commentId, String newContent) {
-        // Step A: Find the existing comment in the database
         Comment existingComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
-        
-        // Step B: Update the text content of the comment
         existingComment.setContent(newContent);
-        
-        // Step C: Save the updated comment back to the database
         return commentRepository.save(existingComment);
     }
 }

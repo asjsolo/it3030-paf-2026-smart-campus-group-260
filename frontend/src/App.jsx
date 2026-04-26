@@ -13,6 +13,23 @@ function App() {
     setRole(null);
   };
 
+function WithLayout({ children }) {
+  return <Layout>{children}</Layout>
+}
+
+function WithAdminLayout({ children }) {
+  return <AdminLayout>{children}</AdminLayout>
+}
+
+function RoleHome() {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role === 'ADMIN') return <Navigate to="/admin" replace />
+  if (user.role === 'TECHNICIAN') return <Navigate to="/dashboard" replace />
+  return <Navigate to="/my-tickets" replace />
+}
+
+export default function App() {
   return (
     <Router>
       <div>
@@ -34,5 +51,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;
