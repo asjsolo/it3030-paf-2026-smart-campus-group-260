@@ -12,122 +12,126 @@ export default function BookingRequestForm() {
   });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+    setMessage('');
   };
 
-  const handleSubmit = async (e) => {
+  const validateTime = () => {
+    const now = new Date();
+    const selectedDate = new Date(formData.date);
+    
+    selectedDate.setHours(23, 59, 59, 999);
+    if (selectedDate < now) {
+      setError('Cannot book a resource in the past.');
+      return false;
+    }
+
+    if (formData.startTime >= formData.endTime) {
+      setError('End time must be after start time.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handlePreview = (e) => {
     e.preventDefault();
+    if (validateTime()) {
+      setShowSummary(true);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
     setMessage('');
     setError('');
     
-    // In a real app, requestedBy would be pulled from logged in user context
     const requestedBy = localStorage.getItem('userEmail') || 'student@smartcampus.edu';
 
     try {
       await createBooking({ ...formData, requestedBy });
-      setMessage('Booking request submitted successfully!');
-      setFormData({
-        resourceId: '',
-        date: '',
-        startTime: '',
-        endTime: '',
-        purpose: '',
-        expectedAttendees: ''
-      });
+      setMessage('✅ Booking request submitted successfully!');
+      setFormData({ resourceId: '', date: '', startTime: '', endTime: '', purpose: '', expectedAttendees: '' });
+      setShowSummary(false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error submitting booking request.');
+      setError('⚠️ ' + (err.response?.data?.message || 'This time slot is already booked.'));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--surface-color)', padding: '24px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-      <h1 style={{ marginBottom: '24px', color: 'var(--text-color)' }}>📅 Request Resource Booking</h1>
+    <div className="card" style={{ maxWidth: '650px', margin: '0 auto' }}>
+      <h2 className="page-title">📅 Request Resource Booking</h2>
+      <p className="page-subtitle">Fill in the details below to request a smart campus resource.</p>
       
-      {message && <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '12px', borderRadius: '4px', marginBottom: '16px' }}>{message}</div>}
-      {error && <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '12px', borderRadius: '4px', marginBottom: '16px' }}>{error}</div>}
+      {message && <div className="alert alert-success">{message}</div>}
+      {error && <div className="alert alert-error">{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>Resource ID / Name</label>
-          <input 
-            type="text" 
-            name="resourceId" 
-            value={formData.resourceId} 
-            onChange={handleChange} 
-            required 
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}
-          />
-        </div>
-        
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>Date</label>
-            <input 
-              type="date" 
-              name="date" 
-              value={formData.date} 
-              onChange={handleChange} 
-              required 
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}
-            />
+      {!showSummary ? (
+        <form onSubmit={handlePreview}>
+          <div className="form-group">
+            <label className="form-label">🏢 Resource ID / Name</label>
+            <input type="text" name="resourceId" value={formData.resourceId} onChange={handleChange} required className="form-control" />
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>Expected Attendees</label>
-            <input 
-              type="number" 
-              name="expectedAttendees" 
-              value={formData.expectedAttendees} 
-              onChange={handleChange} 
-              required 
-              min="1"
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}
-            />
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">📆 Date</label>
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required min={new Date().toISOString().split('T')[0]} className="form-control" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">👥 Expected Attendees</label>
+              <input type="number" name="expectedAttendees" value={formData.expectedAttendees} onChange={handleChange} required min="1" className="form-control" />
+            </div>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>Start Time</label>
-            <input 
-              type="time" 
-              name="startTime" 
-              value={formData.startTime} 
-              onChange={handleChange} 
-              required 
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">🕒 Start Time</label>
+              <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required className="form-control" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">🕕 End Time</label>
+              <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required className="form-control" />
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>End Time</label>
-            <input 
-              type="time" 
-              name="endTime" 
-              value={formData.endTime} 
-              onChange={handleChange} 
-              required 
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}
-            />
+
+          <div className="form-group">
+            <label className="form-label">📝 Purpose</label>
+            <textarea name="purpose" value={formData.purpose} onChange={handleChange} required rows="3" className="form-control" style={{ resize: 'vertical' }}></textarea>
+          </div>
+
+          <button className="btn btn-primary" type="submit" style={{ width: '100%', padding: '14px' }}>
+            Preview Booking
+          </button>
+        </form>
+      ) : (
+        <div className="card" style={{ backgroundColor: 'var(--bg-color)', boxShadow: 'none' }}>
+          <h3 style={{ marginBottom: '16px' }}>📋 Booking Summary Preview</h3>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+            <li><strong>Resource:</strong> {formData.resourceId}</li>
+            <li><strong>Date:</strong> {formData.date}</li>
+            <li><strong>Time:</strong> {formData.startTime} - {formData.endTime}</li>
+            <li><strong>Attendees:</strong> {formData.expectedAttendees}</li>
+            <li><strong>Purpose:</strong> {formData.purpose}</li>
+          </ul>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button onClick={() => setShowSummary(false)} className="btn btn-outline" style={{ flex: 1 }}>
+              Edit
+            </button>
+            <button onClick={handleSubmit} disabled={loading} className="btn btn-primary" style={{ flex: 2 }}>
+              {loading ? '⏳ Submitting...' : '✅ Confirm Booking'}
+            </button>
           </div>
         </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>Purpose</label>
-          <textarea 
-            name="purpose" 
-            value={formData.purpose} 
-            onChange={handleChange} 
-            required 
-            rows="3"
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', color: 'var(--text-color)', resize: 'vertical' }}
-          ></textarea>
-        </div>
-
-        <button type="submit" style={{ padding: '12px', backgroundColor: 'var(--primary-accent)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-          Submit Request
-        </button>
-      </form>
+      )}
     </div>
   );
 }
