@@ -5,11 +5,13 @@ import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import AuthCallback from './pages/AuthCallback'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminResourceManagement from './pages/resources/AdminResourceManagement'
 import Unauthorized from './pages/Unauthorized'
 import CreateTicket from './pages/CreateTicket'
 import TicketDashboard from './pages/TicketDashboard'
 import TicketDetails from './pages/TicketDetails'
 import StudentDashboard from './pages/StudentDashboard'
+import { ResourceProvider } from './pages/resources/ResourceContext'
 
 // Wrap a page in the Module-C sidebar Layout
 function WithLayout({ children }) {
@@ -81,6 +83,18 @@ export default function App() {
             element={
               <ProtectedRoute requiredRole="ADMIN">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Resource Management */}
+          <Route
+            path="/admin/resources"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <ResourceProvider>
+                  <AdminResourceManagement />
+                </ResourceProvider>
               </ProtectedRoute>
             }
           />

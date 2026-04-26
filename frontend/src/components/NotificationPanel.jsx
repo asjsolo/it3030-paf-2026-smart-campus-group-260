@@ -163,7 +163,7 @@ const styles = {
     background: '#0f3460',
     border: 'none',
     padding: '10px 14px',
-    borderRadius: 10,
+    borderRadius: '50%',
     cursor: 'pointer',
     color: '#fff',
     fontSize: '26px',
